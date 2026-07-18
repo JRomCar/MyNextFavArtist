@@ -15,7 +15,11 @@
 
     <!-- ArtistItem strings -->
     <string name="artist_item_content_description">Artist %1$s, %2$s</string>
+    <string name="unknown_artist_type">unknown type</string>
 
     <!-- AlbumArtCard strings -->
     <string name="album_art_content_description">Cover art for %1$s</string>
+
+    <!-- HomeScreen strings -->
+    <string name="home_screen_description">Home screen, featured artists</string>
 </resources>
