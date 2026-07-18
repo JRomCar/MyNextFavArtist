@@ -38,7 +38,15 @@ class FavoritesViewModel @Inject constructor(
         setState(BaseUiState.Loading)
         viewModelScope.launch {
             when (val result = getAllFavoriteArtists()) {
-                is Result.Success -> setState(BaseUiState.Success(result.data))
+                is Result.Success -> {
+                    // An empty list falls back to Initial so the empty-state content
+                    // (EmptyFavoritesContent) renders instead of a bare "Delete All
+                    // Favorites" button over nothing.
+                    setState(
+                        if (result.data.isEmpty()) BaseUiState.Initial
+                        else BaseUiState.Success(result.data)
+                    )
+                }
                 is Result.Error -> onDBAccessError(result.error)
             }
         }

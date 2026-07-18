@@ -36,4 +36,25 @@
     <string name="no_favorites_content_description">No favorite artists available</string>
     <string name="delete_all_favorites_description">Delete all favorite artists</string>
     <string name="empty_favorites_message_description">No favorite artists message</string>
+
+    <!-- DetailsScreen strings -->
+    <string name="back_button">Back</string>
+    <string name="back_button_description">Navigate back to artist list</string>
+    <string name="artist_details_title">Artist Details</string>
+    <string name="type_detail_label">Type:</string>
+    <string name="country_detail_label">Country:</string>
+    <string name="disambiguation_detail_label">Note:</string>
+    <string name="like_artist_button">Add To Favorites</string>
+    <string name="liked_artist_button">In Your List</string>
+    <string name="albums_section_title">Albums</string>
+    <string name="no_albums_message">No albums found for this artist</string>
+    <string name="artist_details_screen_description">Artist details screen for %1$s</string>
+    <string name="artist_details_content_description">Artist %1$s, %2$s</string>
+    <string name="artist_name_heading_description">Artist name: %1$s</string>
+    <string name="artist_details_card_description">Artist information card</string>
+    <string name="add_to_favorites_description">Add artist to favorites</string>
+    <string name="remove_from_favorites_description">Remove artist from favorites</string>
+    <string name="favorite_button_loading_description">Updating favorite status</string>
+    <string name="release_group_content_description">Album %1$s, %2$s</string>
+    <string name="unknown_release_group_type">unknown type</string>
 </resources>
