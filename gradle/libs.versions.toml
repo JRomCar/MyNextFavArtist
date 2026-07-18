@@ -28,7 +28,9 @@ okhttp = "5.3.2"
 roomKtx = "2.8.4"
 roomRuntime = "2.8.4"
 nav3Core = "1.1.0"
-coil3 = "3.5.0"
+# Pinned below coil3's latest (3.5.0) - 3.3.0+ is compiled against a newer Kotlin stdlib
+# metadata version than this project's Kotlin 2.2.10 compiler can read.
+coil3 = "3.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
