@@ -24,4 +24,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "MyNextFavArtist"
 include(":app")
- 
+include(":domain")
+include(":data")
+include(":ui")
+include(":test-utils")

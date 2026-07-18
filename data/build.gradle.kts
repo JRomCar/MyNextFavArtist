@@ -1,0 +1,61 @@
+plugins {
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.android.library)
+}
+
+android {
+    namespace = "com.jrom.mynextfavartist.data"
+    compileSdk = libs.versions.compileSdk.get().toInt()
+
+    defaultConfig {
+        minSdk = libs.versions.minSdk.get().toInt()
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
+
+        buildConfigField("String", "MUSICBRAINZ_BASE_URL", "\"https://musicbrainz.org/ws/2/\"")
+        buildConfigField("String", "COVER_ART_ARCHIVE_BASE_URL", "\"https://coverartarchive.org/\"")
+        // MusicBrainz requires a meaningful User-Agent with a contact string. Override via
+        // -PmbContact=you@example.com or gradle.properties before publishing this app.
+        val mbContact = (project.findProperty("mbContact") as? String) ?: "contact@example.com"
+        buildConfigField("String", "MUSICBRAINZ_CONTACT", "\"$mbContact\"")
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    buildFeatures {
+        buildConfig = true
+    }
+}
+
+dependencies {
+    testImplementation(project(":test-utils"))
+    api(project(":domain"))
+
+    implementation(libs.kotlinx.serialization.json)
+
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+
+    // OkHttp
+    implementation(libs.okhttp)
+    implementation(libs.logging.interceptor)
+
+    // Room
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+}
