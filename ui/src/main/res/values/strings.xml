@@ -26,4 +26,14 @@
     <!-- SearchScreen strings -->
     <string name="search_screen_description">Search artists screen</string>
     <string name="search_prompt_title">Search for an artist</string>
+
+    <!-- FavoritesScreen strings -->
+    <string name="no_favorites_title">No favorite artists yet</string>
+    <string name="no_favorites_description">Add artists to your favorites from the details screen</string>
+    <string name="delete_all_favorites">Delete All Favorites</string>
+    <string name="favorites_screen_description">Favorite artists screen</string>
+    <string name="favorites_list_description">List of favorite artists</string>
+    <string name="no_favorites_content_description">No favorite artists available</string>
+    <string name="delete_all_favorites_description">Delete all favorite artists</string>
+    <string name="empty_favorites_message_description">No favorite artists message</string>
 </resources>

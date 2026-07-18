@@ -29,4 +29,29 @@ object AccessibilityUtils {
     fun getSearchScreenDescription(): String {
         return stringResource(R.string.search_screen_description)
     }
+
+    @Composable
+    fun getFavoritesScreenDescription(): String {
+        return stringResource(R.string.favorites_screen_description)
+    }
+
+    @Composable
+    fun getFavoritesListDescription(): String {
+        return stringResource(R.string.favorites_list_description)
+    }
+
+    @Composable
+    fun getNoFavoritesContentDescription(): String {
+        return stringResource(R.string.no_favorites_content_description)
+    }
+
+    @Composable
+    fun getDeleteAllFavoritesDescription(): String {
+        return stringResource(R.string.delete_all_favorites_description)
+    }
+
+    @Composable
+    fun getEmptyFavoritesMessageDescription(): String {
+        return stringResource(R.string.empty_favorites_message_description)
+    }
 }
