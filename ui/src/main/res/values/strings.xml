@@ -12,4 +12,10 @@
     <string name="unknown_error">Unknown error</string>
     <string name="db_read_error">Error reading from database</string>
     <string name="db_write_error">Error accessing database</string>
+
+    <!-- ArtistItem strings -->
+    <string name="artist_item_content_description">Artist %1$s, %2$s</string>
+
+    <!-- AlbumArtCard strings -->
+    <string name="album_art_content_description">Cover art for %1$s</string>
 </resources>

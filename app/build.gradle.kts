@@ -65,6 +65,10 @@ dependencies {
     implementation(libs.hilt.dagger.android)
     ksp(libs.hilt.dagger.compiler)
 
+    // Coil3 - App.kt sets the SingletonImageLoader.Factory
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
