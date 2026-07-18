@@ -1,6 +1,7 @@
 package com.jrom.mynextfavartist.data.util
 
 import com.jrom.mynextfavartist.data.entities.ArtistData
+import com.jrom.mynextfavartist.data.entities.ArtistDbData
 import com.jrom.mynextfavartist.data.entities.ReleaseGroupData
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.entities.ReleaseGroup
@@ -12,6 +13,22 @@ import java.net.SocketTimeoutException
 
 fun ArtistData.toDomain() = Artist(
     mbid = id,
+    name = name,
+    type = type,
+    country = country,
+    disambiguation = disambiguation,
+)
+
+fun ArtistDbData.toDomain() = Artist(
+    mbid = mbid,
+    name = name,
+    type = type,
+    country = country,
+    disambiguation = disambiguation,
+)
+
+fun Artist.toDb() = ArtistDbData(
+    mbid = mbid,
     name = name,
     type = type,
     country = country,
