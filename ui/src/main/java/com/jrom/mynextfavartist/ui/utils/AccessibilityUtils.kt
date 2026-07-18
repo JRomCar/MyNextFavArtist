@@ -24,4 +24,9 @@ object AccessibilityUtils {
     fun getHomeScreenDescription(): String {
         return stringResource(R.string.home_screen_description)
     }
+
+    @Composable
+    fun getSearchScreenDescription(): String {
+        return stringResource(R.string.search_screen_description)
+    }
 }

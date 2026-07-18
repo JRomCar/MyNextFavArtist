@@ -22,4 +22,8 @@
 
     <!-- HomeScreen strings -->
     <string name="home_screen_description">Home screen, featured artists</string>
+
+    <!-- SearchScreen strings -->
+    <string name="search_screen_description">Search artists screen</string>
+    <string name="search_prompt_title">Search for an artist</string>
 </resources>
