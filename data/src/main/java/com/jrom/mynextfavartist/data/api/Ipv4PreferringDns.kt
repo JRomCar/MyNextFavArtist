@@ -10,10 +10,8 @@ import java.net.InetAddress
  * instead of falling back to IPv4. Sorting IPv4 addresses first means OkHttp tries those
  * before any unreachable IPv6 address, without giving up IPv6 entirely when it does work.
  */
-object Ipv4PreferringDns : Dns {
-    override fun lookup(hostname: String): List<InetAddress> {
-        val addresses = Dns.SYSTEM.lookup(hostname)
-        val ipv4Addresses = addresses.filterIsInstance<Inet4Address>()
-        return ipv4Addresses.ifEmpty { addresses }
-    }
+val Ipv4PreferringDns = Dns { hostname ->
+    val addresses = Dns.SYSTEM.lookup(hostname)
+    val ipv4Addresses = addresses.filterIsInstance<Inet4Address>()
+    ipv4Addresses.ifEmpty { addresses }
 }
