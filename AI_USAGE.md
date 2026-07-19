@@ -106,6 +106,11 @@ questions rather than assumed:
   this is also a legitimate real-world robustness improvement (broken/partial IPv6 is a real
   issue on some networks, not just emulators), not just an emulator workaround.
 
+  Later removed: intermittent `SSLHandshakeException: connection closed` errors on
+  release-group requests persisted on a real device even with this filter disabled, and the
+  same URL failed intermittently in the device browser too — confirming the DNS filter was
+  never the cause and had no remaining purpose.
+
 - **A real empty-state bug in `FavoritesViewModel`, also found only by running the app.**
   `loadFavoriteArtists()` always set `BaseUiState.Success(data)`, even when `data` was an
   empty list — so a first-time user with zero favorites saw a bare "Delete All Favorites"

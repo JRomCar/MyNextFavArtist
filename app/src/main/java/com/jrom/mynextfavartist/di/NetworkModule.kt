@@ -1,7 +1,6 @@
 package com.jrom.mynextfavartist.di
 
 import com.jrom.mynextfavartist.data.BuildConfig
-import com.jrom.mynextfavartist.data.api.Ipv4PreferringDns
 import com.jrom.mynextfavartist.data.api.MusicBrainzApi
 import com.jrom.mynextfavartist.data.api.interceptor.RateLimitInterceptor
 import com.jrom.mynextfavartist.data.api.interceptor.UserAgentInterceptor
@@ -22,7 +21,6 @@ class NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
-        .dns(Ipv4PreferringDns)
         .addInterceptor(UserAgentInterceptor("MyNextFavArtist/1.0 (${BuildConfig.MUSICBRAINZ_CONTACT})"))
         .addInterceptor(RateLimitInterceptor())
         .apply {
