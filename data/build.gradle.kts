@@ -67,4 +67,10 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+
+    // ArtistDaoTest runs against a real in-memory Room database, so it needs an actual device/
+    // emulator - Room's Flow invalidation tracker (does saveArtist() cause observeAllArtists()
+    // to re-emit?) isn't expressible against a mocked ArtistDao.
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.room.testing)
 }
