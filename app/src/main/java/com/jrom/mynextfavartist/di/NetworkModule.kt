@@ -12,16 +12,22 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.serialization.json.Json
 import okhttp3.Cache
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import java.io.File
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
 
 private const val HTTP_CACHE_SIZE_BYTES = 5L * 1024 * 1024
+
+// MusicBrainz responses carry fields this app doesn't model (e.g. relations, tags when
+// requested); ignoreUnknownKeys keeps adding an unmapped field from being a crash.
+private val musicBrainzJson = Json { ignoreUnknownKeys = true }
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -62,7 +68,7 @@ class NetworkModule {
     @Provides
     fun provideRetrofit(client: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(musicBrainzJson.asConverterFactory("application/json".toMediaType()))
             .client(client)
             .baseUrl(BuildConfig.MUSICBRAINZ_BASE_URL)
             .build()

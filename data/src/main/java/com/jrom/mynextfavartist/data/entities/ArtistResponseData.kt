@@ -1,23 +1,25 @@
 package com.jrom.mynextfavartist.data.entities
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 // Response for the artist search endpoint (/artist)
+@Serializable
 data class ArtistSearchResponse(
-    @SerializedName("count") val count: Int? = null,
-    @SerializedName("offset") val offset: Int? = null,
-    @SerializedName("artists") val artists: List<ArtistData>? = emptyList(),
+    @SerialName("count") val count: Int? = null,
+    @SerialName("offset") val offset: Int? = null,
+    @SerialName("artists") val artists: List<ArtistData>? = emptyList(),
 )
 
-// id/name are nullable despite MusicBrainz always documenting them as present: Gson
-// deserializes via reflection, bypassing Kotlin's constructor null-checks, so a response
-// missing either field would otherwise produce a silent null in a "non-null" String and
-// NPE somewhere downstream instead of failing where the bad data actually entered.
+// id/name are nullable despite MusicBrainz always documenting them as present: a single
+// malformed artist entry should be dropped from the list (see toDomain() below), not fail the
+// whole search response.
+@Serializable
 data class ArtistData(
-    @SerializedName("id") val id: String?,
-    @SerializedName("type") val type: String? = null,
-    @SerializedName("name") val name: String?,
-    @SerializedName("country") val country: String? = null,
-    @SerializedName("disambiguation") val disambiguation: String? = null,
-    @SerializedName("score") val score: Int? = null,
+    @SerialName("id") val id: String? = null,
+    @SerialName("type") val type: String? = null,
+    @SerialName("name") val name: String? = null,
+    @SerialName("country") val country: String? = null,
+    @SerialName("disambiguation") val disambiguation: String? = null,
+    @SerialName("score") val score: Int? = null,
 )

@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.android.library)
+    alias(libs.plugins.serialization)
 }
 
 android {
@@ -57,7 +58,7 @@ dependencies {
 
     // Retrofit
     implementation(libs.retrofit)
-    implementation(libs.converter.gson)
+    implementation(libs.kotlinx.serialization.json)
 
     // OkHttp
     implementation(libs.okhttp)

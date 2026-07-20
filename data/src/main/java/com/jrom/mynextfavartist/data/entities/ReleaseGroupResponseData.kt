@@ -1,18 +1,21 @@
 package com.jrom.mynextfavartist.data.entities
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 // Response for the release-group browse endpoint (/release-group?artist=<mbid>)
+@Serializable
 data class ReleaseGroupBrowseResponse(
-    @SerializedName("release-group-count") val releaseGroupCount: Int? = null,
-    @SerializedName("release-group-offset") val releaseGroupOffset: Int? = null,
-    @SerializedName("release-groups") val releaseGroups: List<ReleaseGroupData>? = emptyList(),
+    @SerialName("release-group-count") val releaseGroupCount: Int? = null,
+    @SerialName("release-group-offset") val releaseGroupOffset: Int? = null,
+    @SerialName("release-groups") val releaseGroups: List<ReleaseGroupData>? = emptyList(),
 )
 
 // id/title are nullable for the same reason as ArtistData.id/name - see the comment there.
+@Serializable
 data class ReleaseGroupData(
-    @SerializedName("id") val id: String?,
-    @SerializedName("title") val title: String?,
-    @SerializedName("primary-type") val primaryType: String? = null,
-    @SerializedName("first-release-date") val firstReleaseDate: String? = null,
+    @SerialName("id") val id: String? = null,
+    @SerialName("title") val title: String? = null,
+    @SerialName("primary-type") val primaryType: String? = null,
+    @SerialName("first-release-date") val firstReleaseDate: String? = null,
 )
