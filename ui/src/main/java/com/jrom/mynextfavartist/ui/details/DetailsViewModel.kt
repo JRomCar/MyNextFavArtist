@@ -80,8 +80,11 @@ class DetailsViewModel @Inject constructor(
 
     private fun removeFavorite(artist: Artist) {
         viewModelScope.launch {
+            // isFavorite isn't set here - the observeIsFavorite collector in
+            // checkFavoriteStatus already owns it and will pick up the write via Room's
+            // change invalidation shortly after.
             removeFavoriteArtist(artist.mbid).fold(
-                onSuccess = { updateState { it.copy(isFavorite = false, isFavoriteActionInProgress = false) } },
+                onSuccess = { updateState { it.copy(isFavoriteActionInProgress = false) } },
                 onFailure = ::onFavoriteActionError,
             )
         }
@@ -90,7 +93,7 @@ class DetailsViewModel @Inject constructor(
     private fun saveFavorite(artist: Artist) {
         viewModelScope.launch {
             saveFavoriteArtist(artist).fold(
-                onSuccess = { updateState { it.copy(isFavorite = true, isFavoriteActionInProgress = false) } },
+                onSuccess = { updateState { it.copy(isFavoriteActionInProgress = false) } },
                 onFailure = ::onFavoriteActionError,
             )
         }

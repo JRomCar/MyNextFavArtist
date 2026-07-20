@@ -19,6 +19,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -80,25 +81,29 @@ class DetailsViewModelTest : TestBase() {
         sut.handleAction(DetailsUiAction.ToggleFavorite(artist))
         advanceUntilIdle()
 
-        val state = sut.uiState.value
-        assertTrue(state.isFavorite)
-        assertFalse(state.isFavoriteActionInProgress)
+        verify(saveFavoriteArtist).invoke(artist)
+        assertFalse(sut.uiState.value.isFavoriteActionInProgress)
     }
 
     @Test
     fun `toggle favorite calls removeFavorite when already favorite`() = runUnconfinedTest {
-        whenever(saveFavoriteArtist(artist)).thenReturn(Result.Success(Unit))
-        sut.handleAction(DetailsUiAction.ToggleFavorite(artist))
+        // isFavorite now comes solely from the observed Flow (single source of truth), not
+        // from a prior toggle's write - so "already favorite" is set up via the Flow here.
+        whenever(observeIsFavorite(artist.mbid)).thenReturn(flowOf(Result.Success(true)))
+        whenever(getArtistReleaseGroups(artist.mbid)).thenReturn(
+            Result.Success(MockData.testReleaseGroupsEntityList)
+        )
+        whenever(removeFavoriteArtist(artist.mbid)).thenReturn(Result.Success(Unit))
+
+        sut.handleAction(DetailsUiAction.LoadArtistDetails(artist))
         advanceUntilIdle()
         assertTrue(sut.uiState.value.isFavorite)
 
-        whenever(removeFavoriteArtist(artist.mbid)).thenReturn(Result.Success(Unit))
         sut.handleAction(DetailsUiAction.ToggleFavorite(artist))
         advanceUntilIdle()
 
-        val state = sut.uiState.value
-        assertFalse(state.isFavorite)
-        assertFalse(state.isFavoriteActionInProgress)
+        verify(removeFavoriteArtist).invoke(artist.mbid)
+        assertFalse(sut.uiState.value.isFavoriteActionInProgress)
     }
 
     @Test
