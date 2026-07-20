@@ -6,6 +6,8 @@ import com.jrom.mynextfavartist.data.db.ArtistDao
 import com.jrom.mynextfavartist.data.repository.ArtistLocalDataSource
 import com.jrom.mynextfavartist.domain.dataOrNull
 import com.jrom.mynextfavartist.testutils.TestBase
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -23,12 +25,12 @@ class ArtistLocalDataSourceTest : TestBase() {
     }
 
     @Test
-    fun `getAllArtists calls getAllArtists on ArtistDao`() = runUnconfinedTest {
-        whenever(artistDao.getAllArtists()).thenReturn(listOf(radioheadDbData))
+    fun `observeAllArtists calls observeAllArtists on ArtistDao`() = runUnconfinedTest {
+        whenever(artistDao.observeAllArtists()).thenReturn(flowOf(listOf(radioheadDbData)))
 
-        val result = sut.getAllArtists()
+        val result = sut.observeAllArtists().first()
 
-        verify(artistDao).getAllArtists()
+        verify(artistDao).observeAllArtists()
         assertEquals(listOf(radioheadEntity), result.dataOrNull)
     }
 
@@ -54,9 +56,12 @@ class ArtistLocalDataSourceTest : TestBase() {
     }
 
     @Test
-    fun `checkIfArtistIsFavorite calls getArtist on ArtistDao`() = runUnconfinedTest {
-        sut.checkIfArtistIsFavorite(radioheadEntity.mbid)
+    fun `observeIsFavorite calls observeIsFavorite on ArtistDao`() = runUnconfinedTest {
+        whenever(artistDao.observeIsFavorite(radioheadEntity.mbid)).thenReturn(flowOf(true))
 
-        verify(artistDao).getArtist(radioheadEntity.mbid)
+        val result = sut.observeIsFavorite(radioheadEntity.mbid).first()
+
+        verify(artistDao).observeIsFavorite(radioheadEntity.mbid)
+        assertEquals(true, result.dataOrNull)
     }
 }

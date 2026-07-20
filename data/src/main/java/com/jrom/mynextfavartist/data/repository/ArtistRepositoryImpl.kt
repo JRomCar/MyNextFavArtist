@@ -5,6 +5,7 @@ import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.entities.ReleaseGroup
 import com.jrom.mynextfavartist.domain.error.DataError
 import com.jrom.mynextfavartist.domain.repository.ArtistRepository
+import kotlinx.coroutines.flow.Flow
 
 class ArtistRepositoryImpl(
     private val remote: ArtistDataSource.Remote,
@@ -21,8 +22,8 @@ class ArtistRepositoryImpl(
         artistMbid: String,
     ): Result<List<ReleaseGroup>, DataError.Network> = remote.getArtistReleaseGroups(artistMbid)
 
-    override suspend fun getAllFavoriteArtists(): Result<List<Artist>, DataError.Local> =
-        local.getAllArtists()
+    override fun observeFavoriteArtists(): Flow<Result<List<Artist>, DataError.Local>> =
+        local.observeAllArtists()
 
     override suspend fun saveFavoriteArtist(artist: Artist): Result<Boolean, DataError.Local> =
         local.saveFavoriteArtist(artist)
@@ -33,6 +34,6 @@ class ArtistRepositoryImpl(
     override suspend fun removeAllFavoriteArtists(): Result<Boolean, DataError.Local> =
         local.clearArtists()
 
-    override suspend fun checkIfArtistIsFavorite(artistMbid: String): Result<Boolean, DataError.Local> =
-        local.checkIfArtistIsFavorite(artistMbid)
+    override fun observeIsFavorite(artistMbid: String): Flow<Result<Boolean, DataError.Local>> =
+        local.observeIsFavorite(artistMbid)
 }

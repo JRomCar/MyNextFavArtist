@@ -10,6 +10,8 @@ import com.jrom.mynextfavartist.domain.dataOrNull
 import com.jrom.mynextfavartist.domain.error.DataError
 import com.jrom.mynextfavartist.domain.errorOrNull
 import com.jrom.mynextfavartist.testutils.TestBase
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -64,10 +66,10 @@ class ArtistRepositoryImplTest : TestBase() {
     }
 
     @Test
-    fun `getAllFavoriteArtists delegates to local`() = runUnconfinedTest {
-        whenever(local.getAllArtists()).thenReturn(Result.Success(testArtistsEntityList))
+    fun `observeFavoriteArtists delegates to local`() = runUnconfinedTest {
+        whenever(local.observeAllArtists()).thenReturn(flowOf(Result.Success(testArtistsEntityList)))
 
-        val result = sut.getAllFavoriteArtists()
+        val result = sut.observeFavoriteArtists().first()
 
         assertTrue(result.isSuccess)
         assertEquals(testArtistsEntityList, result.dataOrNull)
@@ -104,10 +106,10 @@ class ArtistRepositoryImplTest : TestBase() {
     }
 
     @Test
-    fun `checkIfArtistIsFavorite delegates to local`() = runUnconfinedTest {
-        whenever(local.checkIfArtistIsFavorite(radioheadEntity.mbid)).thenReturn(Result.Success(true))
+    fun `observeIsFavorite delegates to local`() = runUnconfinedTest {
+        whenever(local.observeIsFavorite(radioheadEntity.mbid)).thenReturn(flowOf(Result.Success(true)))
 
-        val result = sut.checkIfArtistIsFavorite(radioheadEntity.mbid)
+        val result = sut.observeIsFavorite(radioheadEntity.mbid).first()
 
         assertTrue(result.isSuccess)
         assertTrue(result.dataOrNull == true)

@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.jrom.mynextfavartist.data.entities.ArtistDbData
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ArtistDao {
@@ -23,10 +24,10 @@ interface ArtistDao {
     suspend fun saveArtist(artist: ArtistDbData): Long
 
     /**
-     * Get all saved favorite artists.
+     * Observe all saved favorite artists.
      */
     @Query("SELECT * FROM artists ORDER BY name ASC")
-    suspend fun getAllArtists(): List<ArtistDbData>
+    fun observeAllArtists(): Flow<List<ArtistDbData>>
 
     /**
      * Delete all favorite artists.
@@ -36,8 +37,8 @@ interface ArtistDao {
     suspend fun clearArtists(): Int
 
     /**
-     * Get favorite artist by mbid.
+     * Observe whether an artist is a saved favorite.
      */
-    @Query("SELECT * FROM artists WHERE mbid=:artistMbid LIMIT 1")
-    suspend fun getArtist(artistMbid: String): ArtistDbData?
+    @Query("SELECT EXISTS(SELECT 1 FROM artists WHERE mbid = :artistMbid)")
+    fun observeIsFavorite(artistMbid: String): Flow<Boolean>
 }
