@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retryWhen
+import kotlin.time.Duration.Companion.milliseconds
 
 // Room's Flow queries throw on error rather than emitting, and a plain .catch { emit(...) }
 // would let that exception permanently end the flow - the screen would show one error and
@@ -32,7 +33,7 @@ class ArtistLocalDataSource(
             .retryWhen { cause, _ ->
                 if (cause is CancellationException) throw cause
                 emit(Result.Failure(DataError.Local.DB_READ_ERROR))
-                delay(OBSERVE_RETRY_DELAY_MILLIS)
+                delay(OBSERVE_RETRY_DELAY_MILLIS.milliseconds)
                 true
             }
 
