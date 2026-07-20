@@ -17,6 +17,8 @@ sealed interface Result<out D, out E : RootError> {
     }
 }
 
+typealias EmptyResult<E> = Result<Unit, E>
+
 inline val <D, E : RootError> Result<D, E>.dataOrNull: D?
     get() = when (this) {
         is Result.Success -> this.data

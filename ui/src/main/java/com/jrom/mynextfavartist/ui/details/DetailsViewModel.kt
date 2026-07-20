@@ -79,14 +79,7 @@ class DetailsViewModel @Inject constructor(
     private fun removeFavorite(artist: Artist) {
         viewModelScope.launch {
             when (val result = removeFavoriteArtist(artist.mbid)) {
-                is Result.Success -> {
-                    if (result.data) {
-                        updateState { it.copy(isFavorite = false, isFavoriteActionInProgress = false) }
-                    } else {
-                        onFavoriteActionError(DataError.Local.DB_WRITE_ERROR)
-                    }
-                }
-
+                is Result.Success -> updateState { it.copy(isFavorite = false, isFavoriteActionInProgress = false) }
                 is Result.Error -> onFavoriteActionError(result.error)
             }
         }
@@ -95,14 +88,7 @@ class DetailsViewModel @Inject constructor(
     private fun saveFavorite(artist: Artist) {
         viewModelScope.launch {
             when (val result = saveFavoriteArtist(artist)) {
-                is Result.Success -> {
-                    if (result.data) {
-                        updateState { it.copy(isFavorite = true, isFavoriteActionInProgress = false) }
-                    } else {
-                        onFavoriteActionError(DataError.Local.DB_WRITE_ERROR)
-                    }
-                }
-
+                is Result.Success -> updateState { it.copy(isFavorite = true, isFavoriteActionInProgress = false) }
                 is Result.Error -> onFavoriteActionError(result.error)
             }
         }

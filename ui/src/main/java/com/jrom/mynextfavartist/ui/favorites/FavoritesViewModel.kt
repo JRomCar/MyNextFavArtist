@@ -64,12 +64,7 @@ class FavoritesViewModel @Inject constructor(
         setState(BaseUiState.Loading)
         viewModelScope.launch {
             when (val result = removeAllFavoriteArtists()) {
-                is Result.Success -> {
-                    if (result.data) {
-                        setState(BaseUiState.Initial)
-                    } else onDBAccessError(DataError.Local.DB_WRITE_ERROR)
-                }
-
+                is Result.Success -> setState(BaseUiState.Initial)
                 is Result.Error -> onDBAccessError(result.error)
             }
         }

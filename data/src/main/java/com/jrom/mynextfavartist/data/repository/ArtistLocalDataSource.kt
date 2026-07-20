@@ -4,6 +4,7 @@ import com.jrom.mynextfavartist.data.db.ArtistDao
 import com.jrom.mynextfavartist.data.entities.ArtistDbData
 import com.jrom.mynextfavartist.data.util.toDb
 import com.jrom.mynextfavartist.data.util.toDomain
+import com.jrom.mynextfavartist.domain.EmptyResult
 import com.jrom.mynextfavartist.domain.Result
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.error.DataError
@@ -23,30 +24,32 @@ class ArtistLocalDataSource(
             }
             .catch { emit(Result.Error(DataError.Local.DB_READ_ERROR)) }
 
-    override suspend fun saveFavoriteArtist(artist: Artist): Result<Boolean, DataError.Local> =
+    // OnConflictStrategy.REPLACE means the insert only fails via a thrown exception, never
+    // by returning -1, so a successful call here always means the artist is saved.
+    override suspend fun saveFavoriteArtist(artist: Artist): EmptyResult<DataError.Local> =
         try {
-            val rowId = artistDao.saveArtist(artist.toDb())
-            Result.Success(rowId != -1L)
+            artistDao.saveArtist(artist.toDb())
+            Result.Success(Unit)
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
             Result.Error(DataError.Local.DB_WRITE_ERROR)
         }
 
-    override suspend fun removeFavoriteArtist(artistMbid: String): Result<Boolean, DataError.Local> =
+    override suspend fun removeFavoriteArtist(artistMbid: String): EmptyResult<DataError.Local> =
         try {
             val rowsDeleted = artistDao.removeArtist(artistMbid)
-            Result.Success(rowsDeleted > 0)
+            if (rowsDeleted > 0) Result.Success(Unit) else Result.Error(DataError.Local.DB_WRITE_ERROR)
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
             Result.Error(DataError.Local.DB_WRITE_ERROR)
         }
 
-    override suspend fun clearArtists(): Result<Boolean, DataError.Local> =
+    override suspend fun clearArtists(): EmptyResult<DataError.Local> =
         try {
-            artistDao.clearArtists()
-            Result.Success(true)
+            val rowsDeleted = artistDao.clearArtists()
+            if (rowsDeleted > 0) Result.Success(Unit) else Result.Error(DataError.Local.DB_WRITE_ERROR)
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {

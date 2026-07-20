@@ -75,7 +75,7 @@ class DetailsViewModelTest : TestBase() {
 
     @Test
     fun `toggle favorite calls saveFavorite when not already favorite`() = runUnconfinedTest {
-        whenever(saveFavoriteArtist(artist)).thenReturn(Result.Success(true))
+        whenever(saveFavoriteArtist(artist)).thenReturn(Result.Success(Unit))
 
         sut.handleAction(DetailsUiAction.ToggleFavorite(artist))
         advanceUntilIdle()
@@ -87,12 +87,12 @@ class DetailsViewModelTest : TestBase() {
 
     @Test
     fun `toggle favorite calls removeFavorite when already favorite`() = runUnconfinedTest {
-        whenever(saveFavoriteArtist(artist)).thenReturn(Result.Success(true))
+        whenever(saveFavoriteArtist(artist)).thenReturn(Result.Success(Unit))
         sut.handleAction(DetailsUiAction.ToggleFavorite(artist))
         advanceUntilIdle()
         assertTrue(sut.uiState.value.isFavorite)
 
-        whenever(removeFavoriteArtist(artist.mbid)).thenReturn(Result.Success(true))
+        whenever(removeFavoriteArtist(artist.mbid)).thenReturn(Result.Success(Unit))
         sut.handleAction(DetailsUiAction.ToggleFavorite(artist))
         advanceUntilIdle()
 
@@ -102,8 +102,8 @@ class DetailsViewModelTest : TestBase() {
     }
 
     @Test
-    fun `save favorite soft failure emits ShowMessage effect and resets progress flag`() = runUnconfinedTest {
-        whenever(saveFavoriteArtist(artist)).thenReturn(Result.Success(false))
+    fun `save favorite failure emits ShowMessage effect and resets progress flag`() = runUnconfinedTest {
+        whenever(saveFavoriteArtist(artist)).thenReturn(Result.Error(DataError.Local.DB_WRITE_ERROR))
 
         val emissions = mutableListOf<DetailsUiEffect>()
         val effectJob = launch(unconfinedTestDispatcher) {

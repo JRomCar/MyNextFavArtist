@@ -74,7 +74,7 @@ class FavoritesViewModelTest : TestBase() {
 
     @Test
     fun `removeAllFavorites success - resets to Initial`() = runUnconfinedTest {
-        whenever(removeAllFavoriteArtists()).thenReturn(Result.Success(true))
+        whenever(removeAllFavoriteArtists()).thenReturn(Result.Success(Unit))
 
         sut.handleAction(FavoritesUiAction.ClearAllSavedArtists)
         advanceUntilIdle()
@@ -83,8 +83,8 @@ class FavoritesViewModelTest : TestBase() {
     }
 
     @Test
-    fun `removeAllFavorites soft failure - uiState is Error`() = runUnconfinedTest {
-        whenever(removeAllFavoriteArtists()).thenReturn(Result.Success(false))
+    fun `removeAllFavorites failure - uiState is Error`() = runUnconfinedTest {
+        whenever(removeAllFavoriteArtists()).thenReturn(Result.Error(DataError.Local.DB_WRITE_ERROR))
 
         sut.handleAction(FavoritesUiAction.ClearAllSavedArtists)
         advanceUntilIdle()

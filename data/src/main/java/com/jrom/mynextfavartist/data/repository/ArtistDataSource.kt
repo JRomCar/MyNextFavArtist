@@ -1,5 +1,6 @@
 package com.jrom.mynextfavartist.data.repository
 
+import com.jrom.mynextfavartist.domain.EmptyResult
 import com.jrom.mynextfavartist.domain.Result
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.entities.ReleaseGroup
@@ -15,9 +16,9 @@ interface ArtistDataSource {
 
     interface Local {
         fun observeAllArtists(): Flow<Result<List<Artist>, DataError.Local>>
-        suspend fun saveFavoriteArtist(artist: Artist): Result<Boolean, DataError.Local>
-        suspend fun removeFavoriteArtist(artistMbid: String): Result<Boolean, DataError.Local>
-        suspend fun clearArtists(): Result<Boolean, DataError.Local>
+        suspend fun saveFavoriteArtist(artist: Artist): EmptyResult<DataError.Local>
+        suspend fun removeFavoriteArtist(artistMbid: String): EmptyResult<DataError.Local>
+        suspend fun clearArtists(): EmptyResult<DataError.Local>
         fun observeIsFavorite(artistMbid: String): Flow<Result<Boolean, DataError.Local>>
     }
 }

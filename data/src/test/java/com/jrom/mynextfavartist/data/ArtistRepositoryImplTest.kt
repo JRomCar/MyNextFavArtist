@@ -77,32 +77,29 @@ class ArtistRepositoryImplTest : TestBase() {
 
     @Test
     fun `saveFavoriteArtist delegates to local`() = runUnconfinedTest {
-        whenever(local.saveFavoriteArtist(radioheadEntity)).thenReturn(Result.Success(true))
+        whenever(local.saveFavoriteArtist(radioheadEntity)).thenReturn(Result.Success(Unit))
 
         val result = sut.saveFavoriteArtist(radioheadEntity)
 
         assertTrue(result.isSuccess)
-        assertTrue(result.dataOrNull == true)
     }
 
     @Test
     fun `removeFavoriteArtist delegates to local`() = runUnconfinedTest {
-        whenever(local.removeFavoriteArtist(radioheadEntity.mbid)).thenReturn(Result.Success(true))
+        whenever(local.removeFavoriteArtist(radioheadEntity.mbid)).thenReturn(Result.Success(Unit))
 
         val result = sut.removeFavoriteArtist(radioheadEntity.mbid)
 
         assertTrue(result.isSuccess)
-        assertTrue(result.dataOrNull == true)
     }
 
     @Test
     fun `removeAllFavoriteArtists delegates to local clearArtists`() = runUnconfinedTest {
-        whenever(local.clearArtists()).thenReturn(Result.Success(true))
+        whenever(local.clearArtists()).thenReturn(Result.Success(Unit))
 
         val result = sut.removeAllFavoriteArtists()
 
         assertTrue(result.isSuccess)
-        assertTrue(result.dataOrNull == true)
     }
 
     @Test

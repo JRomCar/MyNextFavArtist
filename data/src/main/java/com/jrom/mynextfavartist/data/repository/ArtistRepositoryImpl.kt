@@ -1,5 +1,6 @@
 package com.jrom.mynextfavartist.data.repository
 
+import com.jrom.mynextfavartist.domain.EmptyResult
 import com.jrom.mynextfavartist.domain.Result
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.entities.ReleaseGroup
@@ -25,13 +26,13 @@ class ArtistRepositoryImpl(
     override fun observeFavoriteArtists(): Flow<Result<List<Artist>, DataError.Local>> =
         local.observeAllArtists()
 
-    override suspend fun saveFavoriteArtist(artist: Artist): Result<Boolean, DataError.Local> =
+    override suspend fun saveFavoriteArtist(artist: Artist): EmptyResult<DataError.Local> =
         local.saveFavoriteArtist(artist)
 
-    override suspend fun removeFavoriteArtist(artistMbid: String): Result<Boolean, DataError.Local> =
+    override suspend fun removeFavoriteArtist(artistMbid: String): EmptyResult<DataError.Local> =
         local.removeFavoriteArtist(artistMbid)
 
-    override suspend fun removeAllFavoriteArtists(): Result<Boolean, DataError.Local> =
+    override suspend fun removeAllFavoriteArtists(): EmptyResult<DataError.Local> =
         local.clearArtists()
 
     override fun observeIsFavorite(artistMbid: String): Flow<Result<Boolean, DataError.Local>> =
