@@ -35,7 +35,6 @@ import com.jrom.mynextfavartist.ui.error.asUiIcon
 import com.jrom.mynextfavartist.ui.error.asUiText
 import com.jrom.mynextfavartist.ui.states.BaseUiEffect
 import com.jrom.mynextfavartist.ui.states.BaseUiState
-import com.jrom.mynextfavartist.ui.utils.AccessibilityUtils
 import com.jrom.mynextfavartist.ui.utils.Dimensions
 import com.jrom.mynextfavartist.ui.utils.PreviewWrapper
 import com.jrom.mynextfavartist.ui.utils.collectWithEffect
@@ -71,7 +70,7 @@ fun SearchContent(
     state: BaseUiState<List<Artist>>,
     onAction: (SearchUiAction) -> Unit,
 ) {
-    val screenDescription = AccessibilityUtils.getSearchScreenDescription()
+    val screenDescription = stringResource(R.string.search_screen_description)
 
     Box(
         modifier = modifier.semantics { contentDescription = screenDescription }

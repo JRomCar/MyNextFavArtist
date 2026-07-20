@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
@@ -15,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jrom.mynextfavartist.domain.entities.Artist
+import com.jrom.mynextfavartist.ui.R
 import com.jrom.mynextfavartist.ui.components.ArtistList
 import com.jrom.mynextfavartist.ui.components.ErrorView
 import com.jrom.mynextfavartist.ui.components.LoadingView
@@ -22,7 +24,6 @@ import com.jrom.mynextfavartist.ui.components.PullToRefresh
 import com.jrom.mynextfavartist.ui.states.BaseUiEffect
 import com.jrom.mynextfavartist.ui.states.BaseUiState
 import com.jrom.mynextfavartist.ui.states.HomeUiState
-import com.jrom.mynextfavartist.ui.utils.AccessibilityUtils
 import com.jrom.mynextfavartist.ui.utils.PreviewWrapper
 import com.jrom.mynextfavartist.ui.utils.collectWithEffect
 import com.jrom.mynextfavartist.ui.utils.previewArtists
@@ -35,7 +36,7 @@ fun HomeScreen(
     onDetailClick: (Artist) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val screenDescription = AccessibilityUtils.getHomeScreenDescription()
+    val screenDescription = stringResource(R.string.home_screen_description)
 
     LaunchedEffect(Unit) {
         viewModel.handleAction(HomeUiAction.LoadArtists)

@@ -22,67 +22,12 @@ object AccessibilityUtils {
     }
 
     @Composable
-    fun getHomeScreenDescription(): String {
-        return stringResource(R.string.home_screen_description)
-    }
-
-    @Composable
-    fun getSearchScreenDescription(): String {
-        return stringResource(R.string.search_screen_description)
-    }
-
-    @Composable
-    fun getFavoritesScreenDescription(): String {
-        return stringResource(R.string.favorites_screen_description)
-    }
-
-    @Composable
-    fun getFavoritesListDescription(): String {
-        return stringResource(R.string.favorites_list_description)
-    }
-
-    @Composable
-    fun getNoFavoritesContentDescription(): String {
-        return stringResource(R.string.no_favorites_content_description)
-    }
-
-    @Composable
-    fun getDeleteAllFavoritesDescription(): String {
-        return stringResource(R.string.delete_all_favorites_description)
-    }
-
-    @Composable
-    fun getEmptyFavoritesMessageDescription(): String {
-        return stringResource(R.string.empty_favorites_message_description)
-    }
-
-    @Composable
-    fun getBackButtonDescription(): String {
-        return stringResource(R.string.back_button_description)
-    }
-
-    @Composable
-    fun getArtistDetailsScreenDescription(artistName: String): String {
-        return stringResource(R.string.artist_details_screen_description, artistName)
-    }
-
-    @Composable
     fun getArtistDetailsContentDescription(artist: Artist): String {
         return stringResource(
             R.string.artist_details_content_description,
             artist.name,
             artist.type ?: stringResource(R.string.unknown_artist_type)
         )
-    }
-
-    @Composable
-    fun getArtistNameHeadingDescription(artistName: String): String {
-        return stringResource(R.string.artist_name_heading_description, artistName)
-    }
-
-    @Composable
-    fun getArtistDetailsCardDescription(): String {
-        return stringResource(R.string.artist_details_card_description)
     }
 
     @Composable

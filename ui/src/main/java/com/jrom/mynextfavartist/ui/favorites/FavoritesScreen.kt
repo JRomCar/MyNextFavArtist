@@ -38,7 +38,6 @@ import com.jrom.mynextfavartist.ui.favorites.FavoritesUiAction.ClearAllSavedArti
 import com.jrom.mynextfavartist.ui.favorites.FavoritesUiAction.LoadArtists
 import com.jrom.mynextfavartist.ui.states.BaseUiEffect
 import com.jrom.mynextfavartist.ui.states.BaseUiState
-import com.jrom.mynextfavartist.ui.utils.AccessibilityUtils
 import com.jrom.mynextfavartist.ui.utils.Dimensions
 import com.jrom.mynextfavartist.ui.utils.collectWithEffect
 
@@ -50,7 +49,7 @@ fun FavoritesScreen(
     onDetailClick: (Artist) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val screenDescription = AccessibilityUtils.getFavoritesScreenDescription()
+    val screenDescription = stringResource(R.string.favorites_screen_description)
 
     LaunchedEffect(Unit) {
         viewModel.handleAction(LoadArtists)
@@ -107,8 +106,8 @@ fun FavoritesContent(
 private fun EmptyFavoritesContent(
     modifier: Modifier = Modifier,
 ) {
-    val emptyContentDescription = AccessibilityUtils.getNoFavoritesContentDescription()
-    val emptyMessageDescription = AccessibilityUtils.getEmptyFavoritesMessageDescription()
+    val emptyContentDescription = stringResource(R.string.no_favorites_content_description)
+    val emptyMessageDescription = stringResource(R.string.empty_favorites_message_description)
 
     Box(
         modifier = modifier
@@ -146,8 +145,8 @@ private fun FavoritesListContent(
     onArtistClick: (Artist) -> Unit,
     onDeleteAllClick: () -> Unit
 ) {
-    val listDescription = AccessibilityUtils.getFavoritesListDescription()
-    val deleteAllDescription = AccessibilityUtils.getDeleteAllFavoritesDescription()
+    val listDescription = stringResource(R.string.favorites_list_description)
+    val deleteAllDescription = stringResource(R.string.delete_all_favorites_description)
 
     Column(
         modifier = modifier.semantics { contentDescription = listDescription }

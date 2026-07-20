@@ -68,8 +68,8 @@ fun DetailsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val screenDescription = AccessibilityUtils.getArtistDetailsScreenDescription(artist.name)
-    val backButtonDescription = AccessibilityUtils.getBackButtonDescription()
+    val screenDescription = stringResource(R.string.artist_details_screen_description, artist.name)
+    val backButtonDescription = stringResource(R.string.back_button_description)
 
     LaunchedEffect(artist) {
         viewModel.handleAction(DetailsUiAction.LoadArtistDetails(artist))
@@ -129,7 +129,7 @@ fun DetailsContent(
     onAction: (DetailsUiAction) -> Unit,
 ) {
     val contentDescription = AccessibilityUtils.getArtistDetailsContentDescription(artist)
-    val nameHeadingDescription = AccessibilityUtils.getArtistNameHeadingDescription(artist.name)
+    val nameHeadingDescription = stringResource(R.string.artist_name_heading_description, artist.name)
 
     Column(
         modifier = modifier
@@ -179,7 +179,7 @@ private fun ArtistDetailsCard(
     modifier: Modifier = Modifier,
     artist: Artist,
 ) {
-    val cardDescription = AccessibilityUtils.getArtistDetailsCardDescription()
+    val cardDescription = stringResource(R.string.artist_details_card_description)
 
     Card(
         modifier = modifier
