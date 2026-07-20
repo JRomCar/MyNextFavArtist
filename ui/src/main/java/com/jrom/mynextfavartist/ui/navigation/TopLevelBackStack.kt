@@ -7,16 +7,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.navigation3.runtime.NavKey
 
-class TopLevelBackStack<T : NavKey>(private val startKey: T) {
+class TopLevelBackStack<T : NavKey>(
+    private val startKey: T,
+    initialTopLevelKey: T = startKey,
+    initialStacks: Map<T, List<T>> = mapOf(startKey to listOf(startKey)),
+) {
 
-    private var topLevelBackStacks: LinkedHashMap<T, SnapshotStateList<T>> = linkedMapOf(
-        startKey to mutableStateListOf(startKey)
+    private var topLevelBackStacks: LinkedHashMap<T, SnapshotStateList<T>> = LinkedHashMap(
+        initialStacks.mapValues { (_, stack) -> mutableStateListOf<T>().apply { addAll(stack) } }
     )
 
-    var topLevelKey by mutableStateOf(startKey)
+    var topLevelKey by mutableStateOf(initialTopLevelKey)
         private set
 
-    val backStack = mutableStateListOf<T>(startKey)
+    val backStack = mutableStateListOf<T>()
+
+    init {
+        updateBackStack()
+    }
+
+    /** Serializable snapshot of the current stacks, for the caller to persist across process death. */
+    fun snapshotStacks(): Map<T, List<T>> = topLevelBackStacks.mapValues { it.value.toList() }
 
     private fun updateBackStack() {
         backStack.clear()
