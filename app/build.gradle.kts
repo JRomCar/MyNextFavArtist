@@ -32,6 +32,26 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+}
+
+// MusicBrainz blocks generic/placeholder User-Agents, and data/build.gradle.kts silently falls
+// back to a placeholder contact when -PmbContact isn't supplied (useful for local debug builds).
+// A real release must not ship that placeholder, so fail the release-packaging tasks specifically
+// - not every Gradle invocation - if the property is missing.
+run {
+    // Captured as a true local (not a script-class property) so the doFirst closure below
+    // holds the Provider by value instead of an outer reference to the script object, which
+    // the configuration cache can't serialize.
+    val mbContactProvider = providers.gradleProperty("mbContact")
+    tasks.matching { it.name == "assembleRelease" || it.name == "bundleRelease" }.configureEach {
+        doFirst {
+            check(mbContactProvider.isPresent) {
+                "mbContact Gradle property must be set for release builds, e.g. " +
+                    "-PmbContact=you@example.com (MusicBrainz blocks generic/placeholder User-Agents)."
+            }
+        }
     }
 }
 

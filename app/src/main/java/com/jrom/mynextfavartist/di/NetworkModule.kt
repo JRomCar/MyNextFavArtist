@@ -1,6 +1,7 @@
 package com.jrom.mynextfavartist.di
 
 import android.content.Context
+import com.jrom.mynextfavartist.BuildConfig as AppBuildConfig
 import com.jrom.mynextfavartist.data.BuildConfig
 import com.jrom.mynextfavartist.data.api.MusicBrainzApi
 import com.jrom.mynextfavartist.data.api.interceptor.RateLimitInterceptor
@@ -29,7 +30,11 @@ class NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient = OkHttpClient.Builder()
-        .addInterceptor(UserAgentInterceptor("MyNextFavArtist/1.0 (${BuildConfig.MUSICBRAINZ_CONTACT})"))
+        .addInterceptor(
+            UserAgentInterceptor(
+                "MyNextFavArtist/${AppBuildConfig.VERSION_NAME} (${BuildConfig.MUSICBRAINZ_CONTACT})"
+            )
+        )
         // RetryInterceptor must come before RateLimitInterceptor so each retried attempt -
         // not just the first one - is paced by the rate limiter too.
         .addInterceptor(RetryInterceptor())
