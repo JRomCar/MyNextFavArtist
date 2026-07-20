@@ -9,7 +9,6 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.launch
 
 class NetworkMonitorImpl(
     appContext: Context
@@ -17,27 +16,34 @@ class NetworkMonitorImpl(
 
     private val connectivityManager =
         appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    // Written from ConnectivityManager callback threads and read when emitting
-    // network status, so it must be visible across threads.
-    @Volatile
-    private var lastKnownStateWasOffline: Boolean = isNetworkAvailable().not()
 
     override val networkState: Flow<NetworkState> = callbackFlow {
+        // Local to this collection, not a class field - callbackFlow's producer block re-runs
+        // per collector, and each collector needs its own "was offline" history rather than
+        // racing with every other collector's callback over a shared field.
+        var lastKnownStateWasOffline = isNetworkAvailable().not()
 
-        launch { send(createNetworkStatus(isNetworkAvailable())) }
+        fun createNetworkStatus(isOnline: Boolean): NetworkState {
+            val shouldRefresh = lastKnownStateWasOffline && isOnline
+            return NetworkState(isOnline = isOnline, shouldRefresh = shouldRefresh)
+        }
+
+        // trySend is non-suspending and runs synchronously on the callback thread, so it
+        // preserves the order ConnectivityManager delivers onAvailable/onLost in - unlike
+        // launch { send(...) }, which schedules a separate coroutine per event with no
+        // ordering guarantee between them.
+        trySend(createNetworkStatus(isNetworkAvailable()))
 
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
-                val networkStatus = createNetworkStatus(true)
-                launch { send(networkStatus) }
+                trySend(createNetworkStatus(true))
                 lastKnownStateWasOffline = false
             }
 
             override fun onLost(network: Network) {
                 super.onLost(network)
-                val networkStatus = createNetworkStatus(false)
-                launch { send(networkStatus) }
+                trySend(createNetworkStatus(false))
                 lastKnownStateWasOffline = true
             }
         }
@@ -48,11 +54,6 @@ class NetworkMonitorImpl(
             connectivityManager.unregisterNetworkCallback(callback)
         }
     }.distinctUntilChanged()
-
-    private fun createNetworkStatus(isOnline: Boolean): NetworkState {
-        val shouldRefresh = lastKnownStateWasOffline && isOnline
-        return NetworkState(isOnline = isOnline, shouldRefresh = shouldRefresh)
-    }
 
     fun isNetworkAvailable(): Boolean = connectivityManager.activeNetwork != null
 }
