@@ -41,9 +41,12 @@ class ArtistRemoteDataSource(
         artistMbid: String,
     ): Result<List<ReleaseGroup>, DataError.Network> = withContext(ioDispatcher) {
         return@withContext try {
+            // Descending puts the newest release first and, as a side effect of Kotlin's null
+            // handling in descending sorts, pushes releases with no known date to the end
+            // instead of leading the discography.
             val releaseGroups = fetchAllReleaseGroupPages(artistMbid)
                 .mapNotNull { it.toDomain() }
-                .sortedBy { it.firstReleaseDate ?: "" }
+                .sortedByDescending { it.firstReleaseDate }
             Result.Success(releaseGroups)
         } catch (e: CancellationException) {
             throw e

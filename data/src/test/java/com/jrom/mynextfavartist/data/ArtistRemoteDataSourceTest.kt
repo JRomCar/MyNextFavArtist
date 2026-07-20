@@ -156,6 +156,42 @@ class ArtistRemoteDataSourceTest : TestBase() {
     }
 
     @Test
+    fun `getArtistReleaseGroups sorts newest first with undated releases last`() = runUnconfinedTest {
+        val undated = ReleaseGroupData(
+            id = "3b5e4c1a-1111-4a6d-8f2a-000000000001",
+            title = "Untitled Live Bootleg",
+            primaryType = "Live",
+            firstReleaseDate = null,
+        )
+        val okComputer = ReleaseGroupData(
+            id = "b1392450-e666-3926-a536-22c65f834433",
+            title = "OK Computer",
+            primaryType = "Album",
+            firstReleaseDate = "1997-05-21",
+        )
+        val inRainbows = ReleaseGroupData(
+            id = "1d9e8ed6-3893-4d3b-aa7d-6cd79609e386",
+            title = "In Rainbows",
+            primaryType = "Album",
+            firstReleaseDate = "2007-10-10",
+        )
+        val response = ReleaseGroupBrowseResponse(
+            releaseGroupCount = 3,
+            releaseGroupOffset = 0,
+            releaseGroups = listOf(okComputer, undated, inRainbows),
+        )
+        whenever(musicBrainzApi.getReleaseGroupsForArtist(any(), anyOrNull(), any(), any(), any()))
+            .thenReturn(response)
+
+        val result = sut.getArtistReleaseGroups("mbid")
+
+        assertEquals(
+            listOf("In Rainbows", "OK Computer", "Untitled Live Bootleg"),
+            result.dataOrNull?.map { it.title },
+        )
+    }
+
+    @Test
     fun `getArtistReleaseGroups returns error when API responds 500`() = runUnconfinedTest {
         whenever(musicBrainzApi.getReleaseGroupsForArtist(any(), anyOrNull(), any(), any(), any()))
             .thenThrow(createHttpException(500))
