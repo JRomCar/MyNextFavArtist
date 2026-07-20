@@ -27,7 +27,7 @@ class ArtistRemoteDataSource(
             val response = retryOnTransientFailure {
                 musicBrainzApi.searchArtists(query = query, limit = limit, offset = offset)
             }
-            Result.Success(response.artists?.map { it.toDomain() } ?: emptyList())
+            Result.Success(response.artists?.mapNotNull { it.toDomain() } ?: emptyList())
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -43,7 +43,7 @@ class ArtistRemoteDataSource(
                 musicBrainzApi.getReleaseGroupsForArtist(artistMbid = artistMbid)
             }
             val releaseGroups = response.releaseGroups
-                ?.map { it.toDomain() }
+                ?.mapNotNull { it.toDomain() }
                 ?.sortedBy { it.firstReleaseDate ?: "" }
                 ?: emptyList()
             Result.Success(releaseGroups)

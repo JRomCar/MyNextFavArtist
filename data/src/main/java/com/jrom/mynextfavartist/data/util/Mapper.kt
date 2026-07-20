@@ -11,13 +11,19 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
 
-fun ArtistData.toDomain() = Artist(
-    mbid = id,
-    name = name,
-    type = type,
-    country = country,
-    disambiguation = disambiguation,
-)
+// Returns null when id/name are missing, so the caller can drop the malformed entry instead
+// of propagating a null into Artist's non-null fields.
+fun ArtistData.toDomain(): Artist? {
+    val artistMbid = id ?: return null
+    val artistName = name ?: return null
+    return Artist(
+        mbid = artistMbid,
+        name = artistName,
+        type = type,
+        country = country,
+        disambiguation = disambiguation,
+    )
+}
 
 fun ArtistDbData.toDomain() = Artist(
     mbid = mbid,
@@ -35,12 +41,17 @@ fun Artist.toDb() = ArtistDbData(
     disambiguation = disambiguation,
 )
 
-fun ReleaseGroupData.toDomain() = ReleaseGroup(
-    mbid = id,
-    title = title,
-    primaryType = primaryType,
-    firstReleaseDate = firstReleaseDate,
-)
+// Returns null when id/title are missing - see ArtistData.toDomain() above.
+fun ReleaseGroupData.toDomain(): ReleaseGroup? {
+    val releaseGroupMbid = id ?: return null
+    val releaseGroupTitle = title ?: return null
+    return ReleaseGroup(
+        mbid = releaseGroupMbid,
+        title = releaseGroupTitle,
+        primaryType = primaryType,
+        firstReleaseDate = firstReleaseDate,
+    )
+}
 
 fun mapThrowableToNetworkError(throwable: Throwable): DataError.Network {
     return when (throwable) {

@@ -9,9 +9,10 @@ data class ReleaseGroupBrowseResponse(
     @SerializedName("release-groups") val releaseGroups: List<ReleaseGroupData>? = emptyList(),
 )
 
+// id/title are nullable for the same reason as ArtistData.id/name - see the comment there.
 data class ReleaseGroupData(
-    @SerializedName("id") val id: String,
-    @SerializedName("title") val title: String,
+    @SerializedName("id") val id: String?,
+    @SerializedName("title") val title: String?,
     @SerializedName("primary-type") val primaryType: String? = null,
     @SerializedName("first-release-date") val firstReleaseDate: String? = null,
 )
