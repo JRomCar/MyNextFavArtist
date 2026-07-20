@@ -14,7 +14,6 @@ android {
         consumerProguardFiles("consumer-rules.pro")
 
         buildConfigField("String", "MUSICBRAINZ_BASE_URL", "\"https://musicbrainz.org/ws/2/\"")
-        buildConfigField("String", "COVER_ART_ARCHIVE_BASE_URL", "\"https://coverartarchive.org/\"")
         // MusicBrainz requires a meaningful User-Agent with a contact string.
         val mbContact = (project.findProperty("mbContact") as? String) ?: "contact@example.com"
         buildConfigField("String", "MUSICBRAINZ_CONTACT", "\"$mbContact\"")
@@ -42,8 +41,6 @@ android {
 dependencies {
     testImplementation(project(":test-utils"))
     api(project(":domain"))
-
-    implementation(libs.kotlinx.serialization.json)
 
     // Retrofit
     implementation(libs.retrofit)
