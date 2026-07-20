@@ -120,6 +120,14 @@ questions rather than assumed:
   was fixed here: an empty result now falls back to `BaseUiState.Initial`, which the existing
   empty-state UI already handles.
 
+## Follow-up review
+
+A separate Claude Code pass (using Opus) reviewed the data layer specifically for latent
+bugs rather than porting or building features. Each finding was independently re-verified
+against the source before being trusted — one claimed bug (an `InterruptedException` path in
+`RateLimitInterceptor`) didn't hold up under verification and was discarded rather than
+acted on. The confirmed findings are tracked as follow-up work, not fixed yet.
+
 ## What could not be fully verified
 
 Partway through on-device testing, `musicbrainz.org`'s reachability from the test network
