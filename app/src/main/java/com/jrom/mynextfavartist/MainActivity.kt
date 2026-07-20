@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,7 +33,7 @@ class MainActivity : ComponentActivity() {
                 val isOnline by networkMonitor.networkState.collectAsStateWithLifecycle(null)
 
                 Column(modifier = Modifier.fillMaxSize()) {
-                    if (isOnline == false) {
+                    AnimatedVisibility(visible = isOnline == false) {
                         NoConnectionBanner()
                     }
                     Box(modifier = Modifier.fillMaxSize()) {
