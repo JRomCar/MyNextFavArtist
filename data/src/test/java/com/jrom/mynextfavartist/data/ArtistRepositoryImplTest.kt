@@ -18,7 +18,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -68,31 +67,26 @@ class ArtistRepositoryImplTest : TestBase() {
 
         assertTrue(result.isSuccess)
         assertEquals(testArtistsEntityList, result.dataOrNull)
-        verify(remote, never()).searchArtists(any(), any(), any())
+        verify(remote, never()).searchByArtistIds(any())
     }
 
     @Test
     fun `getHomeArtists fetches from remote and replaces the cache when stale`() = runUnconfinedTest {
         whenever(homeCache.getFreshHomeArtists(any())).thenReturn(null)
-        whenever(remote.searchArtists(any(), any(), any())).thenReturn(Result.Success(testArtistsEntityList))
+        whenever(remote.searchByArtistIds(any())).thenReturn(Result.Success(testArtistsEntityList))
 
         val result = sut.getHomeArtists()
 
         assertTrue(result.isSuccess)
         assertEquals(testArtistsEntityList, result.dataOrNull)
         verify(homeCache).replaceHomeArtists(testArtistsEntityList)
-        val expectedQuery = SeedArtists.mbids.joinToString(separator = " OR ", prefix = "arid:(", postfix = ")")
-        verify(remote).searchArtists(
-            query = eq(expectedQuery),
-            limit = eq(SeedArtists.mbids.size),
-            offset = eq(0),
-        )
+        verify(remote).searchByArtistIds(SeedArtists.mbids)
     }
 
     @Test
     fun `getHomeArtists falls back to a stale cache when remote fails`() = runUnconfinedTest {
         whenever(homeCache.getFreshHomeArtists(any())).thenReturn(null)
-        whenever(remote.searchArtists(any(), any(), any())).thenReturn(Result.Error(DataError.Network.SERVER_ERROR))
+        whenever(remote.searchByArtistIds(any())).thenReturn(Result.Error(DataError.Network.SERVER_ERROR))
         whenever(homeCache.getStaleHomeArtists()).thenReturn(testArtistsEntityList)
 
         val result = sut.getHomeArtists()
@@ -105,7 +99,7 @@ class ArtistRepositoryImplTest : TestBase() {
     fun `getHomeArtists propagates the remote error when there is no cache at all`() = runUnconfinedTest {
         val error = DataError.Network.SERVER_ERROR
         whenever(homeCache.getFreshHomeArtists(any())).thenReturn(null)
-        whenever(remote.searchArtists(any(), any(), any())).thenReturn(Result.Error(error))
+        whenever(remote.searchByArtistIds(any())).thenReturn(Result.Error(error))
         whenever(homeCache.getStaleHomeArtists()).thenReturn(null)
 
         val result = sut.getHomeArtists()

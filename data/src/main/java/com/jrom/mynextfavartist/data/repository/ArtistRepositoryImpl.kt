@@ -32,8 +32,7 @@ class ArtistRepositoryImpl(
     override suspend fun getHomeArtists(): Result<List<Artist>, DataError.Network> {
         homeCache.getFreshHomeArtists(HOME_ARTISTS_CACHE_TTL_MILLIS)?.let { return Result.Success(it) }
 
-        val seedQuery = SeedArtists.mbids.joinToString(separator = " OR ", prefix = "arid:(", postfix = ")")
-        return when (val result = remote.searchArtists(query = seedQuery, limit = SeedArtists.mbids.size, offset = 0)) {
+        return when (val result = remote.searchByArtistIds(SeedArtists.mbids)) {
             is Result.Success -> {
                 homeCache.replaceHomeArtists(result.data)
                 result

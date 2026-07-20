@@ -26,6 +26,19 @@ class ArtistRemoteDataSource(
         query: String,
         limit: Int,
         offset: Int,
+    ): Result<List<Artist>, DataError.Network> = search(query.escapeLucene(), limit, offset)
+
+    override suspend fun searchByArtistIds(
+        artistMbids: List<String>,
+    ): Result<List<Artist>, DataError.Network> {
+        val query = artistMbids.joinToString(separator = " OR ", prefix = "arid:(", postfix = ")")
+        return search(query, limit = artistMbids.size, offset = 0)
+    }
+
+    private suspend fun search(
+        query: String,
+        limit: Int,
+        offset: Int,
     ): Result<List<Artist>, DataError.Network> = withContext(ioDispatcher) {
         return@withContext try {
             val response = musicBrainzApi.searchArtists(query = query, limit = limit, offset = offset)
@@ -74,5 +87,18 @@ class ArtistRemoteDataSource(
             if (allReleaseGroups.size >= total) break
         }
         return allReleaseGroups
+    }
+}
+
+// MusicBrainz's `query` param is a Lucene expression, so free-text user input (e.g. "AC/DC",
+// "Panic! At The Disco") must have Lucene's reserved characters escaped before being sent, or
+// the API rejects it with a 400. This is specific to MusicBrainz's search backend, so it lives
+// here rather than in the domain use case that originates the free-text query.
+private val LUCENE_SPECIAL_CHARS = "+-&|!(){}[]^\"~*?:\\/".toSet()
+
+private fun String.escapeLucene(): String = buildString {
+    for (c in this@escapeLucene) {
+        if (c in LUCENE_SPECIAL_CHARS) append('\\')
+        append(c)
     }
 }

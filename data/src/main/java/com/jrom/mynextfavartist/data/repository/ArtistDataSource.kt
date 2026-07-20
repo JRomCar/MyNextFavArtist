@@ -10,7 +10,12 @@ import kotlinx.coroutines.flow.Flow
 interface ArtistDataSource {
 
     interface Remote {
+        /** [query] is free-text user input; reserved Lucene characters are escaped before it's sent. */
         suspend fun searchArtists(query: String, limit: Int, offset: Int): Result<List<Artist>, DataError.Network>
+
+        /** Looks up an exact set of artists by MBID in a single request. Not escaped - the caller owns the ID list. */
+        suspend fun searchByArtistIds(artistMbids: List<String>): Result<List<Artist>, DataError.Network>
+
         suspend fun getArtistReleaseGroups(artistMbid: String): Result<List<ReleaseGroup>, DataError.Network>
     }
 

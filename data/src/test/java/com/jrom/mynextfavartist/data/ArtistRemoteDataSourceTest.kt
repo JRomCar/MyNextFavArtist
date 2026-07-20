@@ -55,6 +55,50 @@ class ArtistRemoteDataSourceTest : TestBase() {
     }
 
     @Test
+    fun `searchArtists escapes Lucene special characters before calling the API`() = runUnconfinedTest {
+        whenever(musicBrainzApi.searchArtists(any(), any(), any(), any()))
+            .thenReturn(testArtistSearchResponse)
+
+        sut.searchArtists("AC/DC (band)", 30, 0)
+
+        verify(musicBrainzApi).searchArtists(
+            query = eq("AC\\/DC \\(band\\)"),
+            fmt = any(),
+            limit = eq(30),
+            offset = eq(0),
+        )
+    }
+
+    @Test
+    fun `searchByArtistIds builds an unescaped arid OR expression and returns success`() = runUnconfinedTest {
+        whenever(musicBrainzApi.searchArtists(any(), any(), any(), any()))
+            .thenReturn(testArtistSearchResponse)
+        val mbids = listOf("mbid-1", "mbid-2")
+
+        val result = sut.searchByArtistIds(mbids)
+
+        assertTrue(result.isSuccess)
+        assertEquals(testArtistsEntityList, result.dataOrNull)
+        verify(musicBrainzApi).searchArtists(
+            query = eq("arid:(mbid-1 OR mbid-2)"),
+            fmt = any(),
+            limit = eq(mbids.size),
+            offset = eq(0),
+        )
+    }
+
+    @Test
+    fun `searchByArtistIds returns error when API responds 400`() = runUnconfinedTest {
+        whenever(musicBrainzApi.searchArtists(any(), any(), any(), any()))
+            .thenThrow(createHttpException(400))
+
+        val result = sut.searchByArtistIds(listOf("mbid-1"))
+
+        assertTrue(result.isFailure)
+        assertEquals(DataError.Network.BAD_REQUEST, result.errorOrNull)
+    }
+
+    @Test
     fun `searchArtists propagates CancellationException instead of converting it to an error`() = runUnconfinedTest {
         whenever(musicBrainzApi.searchArtists(any(), any(), any(), any()))
             .thenAnswer { throw CancellationException("cancelled") }
