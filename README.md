@@ -51,7 +51,7 @@ Two things about MusicBrainz shaped several architecture decisions here:
 
 - **No browse-all or trending endpoint.** Only free-text search (`/artist?query=...`) and
   lookup-by-MBID exist. The Home screen shows a small curated list of well-known artists
-  (`domain/usecase/SeedArtists.kt`), fetched in a **single** request via a Lucene
+  (`data/repository/SeedArtists.kt`), fetched in a **single** request via a Lucene
   `arid:(id1 OR id2 OR ...)` query against the same search endpoint used for user search —
   not one request per artist, which would be far too slow under the rate limit below.
 - **1 request/second rate limit, and a required User-Agent.** `RateLimitInterceptor` and

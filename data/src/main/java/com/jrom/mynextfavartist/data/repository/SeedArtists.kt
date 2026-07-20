@@ -1,4 +1,4 @@
-package com.jrom.mynextfavartist.domain.usecase
+package com.jrom.mynextfavartist.data.repository
 
 /**
  * MusicBrainz has no "trending"/"popular" or browse-all endpoint - only search-by-query

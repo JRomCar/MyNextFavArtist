@@ -6,7 +6,6 @@ import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.entities.ReleaseGroup
 import com.jrom.mynextfavartist.domain.error.DataError
 import com.jrom.mynextfavartist.domain.repository.ArtistRepository
-import com.jrom.mynextfavartist.domain.usecase.SeedArtists
 import kotlinx.coroutines.flow.Flow
 
 // The seed list is a fixed set of well-known MBIDs - their metadata (name, type, country)

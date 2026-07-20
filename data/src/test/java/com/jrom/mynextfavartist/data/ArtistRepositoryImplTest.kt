@@ -5,11 +5,11 @@ import com.jrom.mynextfavartist.data.MockData.testArtistsEntityList
 import com.jrom.mynextfavartist.data.MockData.testReleaseGroupsEntityList
 import com.jrom.mynextfavartist.data.repository.ArtistDataSource
 import com.jrom.mynextfavartist.data.repository.ArtistRepositoryImpl
+import com.jrom.mynextfavartist.data.repository.SeedArtists
 import com.jrom.mynextfavartist.domain.Result
 import com.jrom.mynextfavartist.domain.dataOrNull
 import com.jrom.mynextfavartist.domain.error.DataError
 import com.jrom.mynextfavartist.domain.errorOrNull
-import com.jrom.mynextfavartist.domain.usecase.SeedArtists
 import com.jrom.mynextfavartist.testutils.TestBase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
