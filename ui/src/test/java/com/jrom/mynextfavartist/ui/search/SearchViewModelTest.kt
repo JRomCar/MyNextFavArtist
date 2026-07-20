@@ -52,7 +52,7 @@ class SearchViewModelTest : TestBase() {
 
     @Test
     fun `search request updates state to Error on failure`() = runUnconfinedTest {
-        whenever(searchArtists("bad")).thenReturn(flowOf(Result.Error(DataError.Network.UNKNOWN)))
+        whenever(searchArtists("bad")).thenReturn(flowOf(Result.Failure(DataError.Network.UNKNOWN)))
 
         sut.handleAction(SearchUiAction.SearchRequest("bad"))
         advanceTimeBy(300)

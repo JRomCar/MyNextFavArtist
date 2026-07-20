@@ -61,7 +61,7 @@ class FavoritesViewModelTest : TestBase() {
 
     @Test
     fun `loadFavoriteArtists failure - uiState is Error`() = runUnconfinedTest {
-        whenever(observeFavoriteArtists()).thenReturn(flowOf(Result.Error(DataError.Local.DB_READ_ERROR)))
+        whenever(observeFavoriteArtists()).thenReturn(flowOf(Result.Failure(DataError.Local.DB_READ_ERROR)))
 
         sut.handleAction(FavoritesUiAction.LoadArtists)
         advanceUntilIdle()
@@ -84,7 +84,7 @@ class FavoritesViewModelTest : TestBase() {
 
     @Test
     fun `removeAllFavorites failure - uiState is Error`() = runUnconfinedTest {
-        whenever(removeAllFavoriteArtists()).thenReturn(Result.Error(DataError.Local.DB_WRITE_ERROR))
+        whenever(removeAllFavoriteArtists()).thenReturn(Result.Failure(DataError.Local.DB_WRITE_ERROR))
 
         sut.handleAction(FavoritesUiAction.ClearAllSavedArtists)
         advanceUntilIdle()

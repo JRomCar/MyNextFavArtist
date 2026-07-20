@@ -37,7 +37,7 @@ class ArtistRepositoryImpl(
                 homeCache.replaceHomeArtists(result.data)
                 result
             }
-            is Result.Error -> homeCache.getStaleHomeArtists()?.let { Result.Success(it) } ?: result
+            is Result.Failure -> homeCache.getStaleHomeArtists()?.let { Result.Success(it) } ?: result
         }
     }
 

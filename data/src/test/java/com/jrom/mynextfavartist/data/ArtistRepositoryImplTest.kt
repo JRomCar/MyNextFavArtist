@@ -51,7 +51,7 @@ class ArtistRepositoryImplTest : TestBase() {
     fun `searchArtists returns failure when remote search fails`() = runUnconfinedTest {
         val query = "Radiohead"
         val error = DataError.Network.SERVER_ERROR
-        whenever(remote.searchArtists(query, 30, 0)).thenReturn(Result.Error(error))
+        whenever(remote.searchArtists(query, 30, 0)).thenReturn(Result.Failure(error))
 
         val result = sut.searchArtists(query, 30, 0)
 
@@ -86,7 +86,7 @@ class ArtistRepositoryImplTest : TestBase() {
     @Test
     fun `getHomeArtists falls back to a stale cache when remote fails`() = runUnconfinedTest {
         whenever(homeCache.getFreshHomeArtists(any())).thenReturn(null)
-        whenever(remote.searchByArtistIds(any())).thenReturn(Result.Error(DataError.Network.SERVER_ERROR))
+        whenever(remote.searchByArtistIds(any())).thenReturn(Result.Failure(DataError.Network.SERVER_ERROR))
         whenever(homeCache.getStaleHomeArtists()).thenReturn(testArtistsEntityList)
 
         val result = sut.getHomeArtists()
@@ -99,7 +99,7 @@ class ArtistRepositoryImplTest : TestBase() {
     fun `getHomeArtists propagates the remote error when there is no cache at all`() = runUnconfinedTest {
         val error = DataError.Network.SERVER_ERROR
         whenever(homeCache.getFreshHomeArtists(any())).thenReturn(null)
-        whenever(remote.searchByArtistIds(any())).thenReturn(Result.Error(error))
+        whenever(remote.searchByArtistIds(any())).thenReturn(Result.Failure(error))
         whenever(homeCache.getStaleHomeArtists()).thenReturn(null)
 
         val result = sut.getHomeArtists()

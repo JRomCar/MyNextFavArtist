@@ -46,7 +46,7 @@ class ArtistRemoteDataSource(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(mapThrowableToNetworkError(e))
+            Result.Failure(mapThrowableToNetworkError(e))
         }
     }
 
@@ -64,7 +64,7 @@ class ArtistRemoteDataSource(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(mapThrowableToNetworkError(e))
+            Result.Failure(mapThrowableToNetworkError(e))
         }
     }
 

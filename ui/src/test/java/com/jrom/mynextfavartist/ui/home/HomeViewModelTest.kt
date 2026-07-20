@@ -45,7 +45,7 @@ class HomeViewModelTest : TestBase() {
 
     @Test
     fun `load artists failure - uiState is Error`() = runUnconfinedTest {
-        whenever(getHomeArtists()).thenReturn(Result.Error(DataError.Network.UNKNOWN))
+        whenever(getHomeArtists()).thenReturn(Result.Failure(DataError.Network.UNKNOWN))
 
         sut.handleAction(HomeUiAction.LoadArtists)
         advanceUntilIdle()
@@ -63,7 +63,7 @@ class HomeViewModelTest : TestBase() {
         advanceUntilIdle()
         assertEquals(BaseUiState.Success(artistsList), sut.uiState.value)
 
-        whenever(getHomeArtists()).thenReturn(Result.Error(DataError.Network.UNKNOWN))
+        whenever(getHomeArtists()).thenReturn(Result.Failure(DataError.Network.UNKNOWN))
         sut.handleAction(HomeUiAction.LoadArtists)
         advanceUntilIdle()
 

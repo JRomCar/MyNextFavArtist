@@ -31,7 +31,7 @@ class ArtistLocalDataSource(
             }
             .retryWhen { cause, _ ->
                 if (cause is CancellationException) throw cause
-                emit(Result.Error(DataError.Local.DB_READ_ERROR))
+                emit(Result.Failure(DataError.Local.DB_READ_ERROR))
                 delay(OBSERVE_RETRY_DELAY_MILLIS)
                 true
             }
@@ -45,27 +45,27 @@ class ArtistLocalDataSource(
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            Result.Error(DataError.Local.DB_WRITE_ERROR)
+            Result.Failure(DataError.Local.DB_WRITE_ERROR)
         }
 
     override suspend fun removeFavoriteArtist(artistMbid: String): EmptyResult<DataError.Local> =
         try {
             val rowsDeleted = artistDao.removeArtist(artistMbid)
-            if (rowsDeleted > 0) Result.Success(Unit) else Result.Error(DataError.Local.DB_WRITE_ERROR)
+            if (rowsDeleted > 0) Result.Success(Unit) else Result.Failure(DataError.Local.DB_WRITE_ERROR)
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            Result.Error(DataError.Local.DB_WRITE_ERROR)
+            Result.Failure(DataError.Local.DB_WRITE_ERROR)
         }
 
     override suspend fun clearArtists(): EmptyResult<DataError.Local> =
         try {
             val rowsDeleted = artistDao.clearArtists()
-            if (rowsDeleted > 0) Result.Success(Unit) else Result.Error(DataError.Local.DB_WRITE_ERROR)
+            if (rowsDeleted > 0) Result.Success(Unit) else Result.Failure(DataError.Local.DB_WRITE_ERROR)
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            Result.Error(DataError.Local.DB_WRITE_ERROR)
+            Result.Failure(DataError.Local.DB_WRITE_ERROR)
         }
 
     override fun observeIsFavorite(artistMbid: String): Flow<Result<Boolean, DataError.Local>> =
@@ -73,7 +73,7 @@ class ArtistLocalDataSource(
             .map<Boolean, Result<Boolean, DataError.Local>> { Result.Success(it) }
             .retryWhen { cause, _ ->
                 if (cause is CancellationException) throw cause
-                emit(Result.Error(DataError.Local.DB_READ_ERROR))
+                emit(Result.Failure(DataError.Local.DB_READ_ERROR))
                 delay(OBSERVE_RETRY_DELAY_MILLIS)
                 true
             }

@@ -64,7 +64,7 @@ class DetailsViewModelTest : TestBase() {
     fun `release groups failure sets Error state`() = runUnconfinedTest {
         whenever(observeIsFavorite(artist.mbid)).thenReturn(flowOf(Result.Success(false)))
         whenever(getArtistReleaseGroups(artist.mbid)).thenReturn(
-            Result.Error(DataError.Network.UNKNOWN)
+            Result.Failure(DataError.Network.UNKNOWN)
         )
 
         sut.handleAction(DetailsUiAction.LoadArtistDetails(artist))
@@ -103,7 +103,7 @@ class DetailsViewModelTest : TestBase() {
 
     @Test
     fun `save favorite failure emits ShowMessage effect and resets progress flag`() = runUnconfinedTest {
-        whenever(saveFavoriteArtist(artist)).thenReturn(Result.Error(DataError.Local.DB_WRITE_ERROR))
+        whenever(saveFavoriteArtist(artist)).thenReturn(Result.Failure(DataError.Local.DB_WRITE_ERROR))
 
         val emissions = mutableListOf<DetailsUiEffect>()
         val effectJob = launch(unconfinedTestDispatcher) {
