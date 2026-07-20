@@ -104,6 +104,7 @@ class DataModule {
     }
 
     @Provides
+    @Singleton
     fun provideNetworkMonitor(
         @ApplicationContext context: Context
     ): NetworkMonitor = NetworkMonitorImpl(context)
