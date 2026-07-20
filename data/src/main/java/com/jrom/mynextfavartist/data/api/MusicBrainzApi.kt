@@ -17,8 +17,11 @@ interface MusicBrainzApi {
     @GET("release-group")
     suspend fun getReleaseGroupsForArtist(
         @Query("artist") artistMbid: String,
-        @Query("type") type: String = "album",
+        // Omitted (rather than defaulted to "album") so callers get every release-group type
+        // - EPs, singles, live releases, compilations - not just albums, unless they opt in.
+        @Query("type") type: String? = null,
         @Query("fmt") fmt: String = "json",
         @Query("limit") limit: Int = 100,
+        @Query("offset") offset: Int = 0,
     ): ReleaseGroupBrowseResponse
 }

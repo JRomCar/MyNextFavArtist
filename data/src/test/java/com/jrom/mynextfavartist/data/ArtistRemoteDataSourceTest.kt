@@ -5,6 +5,8 @@ import com.jrom.mynextfavartist.data.MockData.testArtistsEntityList
 import com.jrom.mynextfavartist.data.MockData.testReleaseGroupBrowseResponse
 import com.jrom.mynextfavartist.data.MockData.testReleaseGroupsEntityList
 import com.jrom.mynextfavartist.data.api.MusicBrainzApi
+import com.jrom.mynextfavartist.data.entities.ReleaseGroupBrowseResponse
+import com.jrom.mynextfavartist.data.entities.ReleaseGroupData
 import com.jrom.mynextfavartist.data.repository.ArtistRemoteDataSource
 import com.jrom.mynextfavartist.domain.dataOrNull
 import com.jrom.mynextfavartist.domain.error.DataError
@@ -16,6 +18,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -130,7 +134,7 @@ class ArtistRemoteDataSourceTest : TestBase() {
 
     @Test
     fun `getArtistReleaseGroups returns success sorted by first release date`() = runUnconfinedTest {
-        whenever(musicBrainzApi.getReleaseGroupsForArtist(any(), any(), any(), any()))
+        whenever(musicBrainzApi.getReleaseGroupsForArtist(any(), anyOrNull(), any(), any(), any()))
             .thenReturn(testReleaseGroupBrowseResponse)
 
         val result = sut.getArtistReleaseGroups("mbid")
@@ -140,8 +144,46 @@ class ArtistRemoteDataSourceTest : TestBase() {
     }
 
     @Test
+    fun `getArtistReleaseGroups paginates until all release groups are fetched`() = runUnconfinedTest {
+        val page1 = ReleaseGroupBrowseResponse(
+            releaseGroupCount = 2,
+            releaseGroupOffset = 0,
+            releaseGroups = listOf(
+                ReleaseGroupData(
+                    id = "b1392450-e666-3926-a536-22c65f834433",
+                    title = "OK Computer",
+                    primaryType = "Album",
+                    firstReleaseDate = "1997-05-21",
+                )
+            ),
+        )
+        val page2 = ReleaseGroupBrowseResponse(
+            releaseGroupCount = 2,
+            releaseGroupOffset = 1,
+            releaseGroups = listOf(
+                ReleaseGroupData(
+                    id = "1d9e8ed6-3893-4d3b-aa7d-6cd79609e386",
+                    title = "In Rainbows",
+                    primaryType = "Album",
+                    firstReleaseDate = "2007-10-10",
+                )
+            ),
+        )
+        whenever(musicBrainzApi.getReleaseGroupsForArtist(any(), anyOrNull(), any(), any(), eq(0)))
+            .thenReturn(page1)
+        whenever(musicBrainzApi.getReleaseGroupsForArtist(any(), anyOrNull(), any(), any(), eq(1)))
+            .thenReturn(page2)
+
+        val result = sut.getArtistReleaseGroups("mbid")
+
+        assertTrue(result.isSuccess)
+        assertEquals(2, result.dataOrNull?.size)
+        verify(musicBrainzApi, times(2)).getReleaseGroupsForArtist(any(), anyOrNull(), any(), any(), any())
+    }
+
+    @Test
     fun `getArtistReleaseGroups returns error when API responds 500`() = runUnconfinedTest {
-        whenever(musicBrainzApi.getReleaseGroupsForArtist(any(), any(), any(), any()))
+        whenever(musicBrainzApi.getReleaseGroupsForArtist(any(), anyOrNull(), any(), any(), any()))
             .thenThrow(createHttpException(500))
 
         val result = sut.getArtistReleaseGroups("mbid")
