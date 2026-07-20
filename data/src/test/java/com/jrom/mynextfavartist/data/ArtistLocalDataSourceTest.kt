@@ -10,7 +10,9 @@ import com.jrom.mynextfavartist.domain.errorOrNull
 import com.jrom.mynextfavartist.testutils.TestBase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -97,6 +99,37 @@ class ArtistLocalDataSourceTest : TestBase() {
         val result = sut.clearArtists()
 
         assertEquals(DataError.Local.DB_WRITE_ERROR, result.errorOrNull)
+    }
+
+    @Test
+    fun `observeAllArtists retries after a transient DAO error and recovers`() = runUnconfinedTest {
+        var attempt = 0
+        val recoveringFlow = flow {
+            attempt++
+            if (attempt == 1) throw RuntimeException("transient")
+            emit(listOf(radioheadDbData))
+        }
+        whenever(artistDao.observeAllArtists()).thenReturn(recoveringFlow)
+
+        val results = sut.observeAllArtists().toList()
+
+        assertEquals(DataError.Local.DB_READ_ERROR, results[0].errorOrNull)
+        assertEquals(listOf(radioheadEntity), results[1].dataOrNull)
+    }
+
+    @Test
+    fun `observeAllArtists rethrows CancellationException instead of retrying`() = runUnconfinedTest {
+        val cancellationException = CancellationException("cancelled")
+        whenever(artistDao.observeAllArtists()).thenReturn(flow { throw cancellationException })
+
+        var caught: CancellationException? = null
+        try {
+            sut.observeAllArtists().toList()
+        } catch (e: CancellationException) {
+            caught = e
+        }
+
+        assertEquals(cancellationException, caught)
     }
 
     @Test

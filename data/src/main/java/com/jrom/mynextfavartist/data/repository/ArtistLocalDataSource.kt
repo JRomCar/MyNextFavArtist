@@ -9,9 +9,16 @@ import com.jrom.mynextfavartist.domain.Result
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.error.DataError
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retryWhen
+
+// Room's Flow queries throw on error rather than emitting, and a plain .catch { emit(...) }
+// would let that exception permanently end the flow - the screen would show one error and
+// never update again for the rest of the process lifetime. retryWhen instead emits the error
+// once, waits, then re-collects the DAO's Flow, so the stream survives a transient DB error.
+private const val OBSERVE_RETRY_DELAY_MILLIS = 2_000L
 
 class ArtistLocalDataSource(
     private val artistDao: ArtistDao,
@@ -22,7 +29,12 @@ class ArtistLocalDataSource(
             .map<List<ArtistDbData>, Result<List<Artist>, DataError.Local>> { artists ->
                 Result.Success(artists.map { it.toDomain() })
             }
-            .catch { emit(Result.Error(DataError.Local.DB_READ_ERROR)) }
+            .retryWhen { cause, _ ->
+                if (cause is CancellationException) throw cause
+                emit(Result.Error(DataError.Local.DB_READ_ERROR))
+                delay(OBSERVE_RETRY_DELAY_MILLIS)
+                true
+            }
 
     // OnConflictStrategy.REPLACE means the insert only fails via a thrown exception, never
     // by returning -1, so a successful call here always means the artist is saved.
@@ -59,5 +71,10 @@ class ArtistLocalDataSource(
     override fun observeIsFavorite(artistMbid: String): Flow<Result<Boolean, DataError.Local>> =
         artistDao.observeIsFavorite(artistMbid)
             .map<Boolean, Result<Boolean, DataError.Local>> { Result.Success(it) }
-            .catch { emit(Result.Error(DataError.Local.DB_READ_ERROR)) }
+            .retryWhen { cause, _ ->
+                if (cause is CancellationException) throw cause
+                emit(Result.Error(DataError.Local.DB_READ_ERROR))
+                delay(OBSERVE_RETRY_DELAY_MILLIS)
+                true
+            }
 }
