@@ -75,6 +75,20 @@ class SearchViewModelTest : TestBase() {
     }
 
     @Test
+    fun `clearing the query after a successful search resets state to Initial`() = runUnconfinedTest {
+        sut.handleAction(SearchUiAction.SearchRequest("radio"))
+        advanceTimeBy(300)
+        advanceUntilIdle()
+        assertEquals(artistsList, (sut.uiState.value as BaseUiState.Success).data)
+
+        sut.handleAction(SearchUiAction.SearchRequest(""))
+        advanceTimeBy(300)
+        advanceUntilIdle()
+
+        assertEquals(BaseUiState.Initial, sut.uiState.value)
+    }
+
+    @Test
     fun `artist clicked emits navigate ui effect`() = runUnconfinedTest {
         val emissions = mutableListOf<BaseUiEffect>()
         val effectJob = launch(unconfinedTestDispatcher) {

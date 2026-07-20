@@ -18,11 +18,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -51,15 +50,19 @@ class SearchViewModel @Inject constructor(
     private fun observeSearchQuery() {
         searchQuery
             .debounce(300.milliseconds)
-            .filter { query -> query.length >= 2 }
             .distinctUntilChanged() // Only process if the query has actually changed
-            .onEach { setState(BaseUiState.Loading) }
             .flatMapLatest { query ->
-                searchArtists(query).map { result ->
-                    result.fold(
-                        onSuccess = { setState(BaseUiState.Success(it)) },
-                        onFailure = { error -> setState(BaseUiState.Error(error.asUiText(), error.asUiIcon())) },
-                    )
+                if (query.length < MIN_QUERY_LENGTH) {
+                    setState(BaseUiState.Initial)
+                    emptyFlow()
+                } else {
+                    setState(BaseUiState.Loading)
+                    searchArtists(query).map { result ->
+                        result.fold(
+                            onSuccess = { setState(BaseUiState.Success(it)) },
+                            onFailure = { error -> setState(BaseUiState.Error(error.asUiText(), error.asUiIcon())) },
+                        )
+                    }
                 }
             }.catch {
                 val error = DataError.Network.UNKNOWN
@@ -74,5 +77,6 @@ class SearchViewModel @Inject constructor(
 
     private companion object {
         const val SEARCH_QUERY_KEY = "search_query"
+        const val MIN_QUERY_LENGTH = 2
     }
 }
