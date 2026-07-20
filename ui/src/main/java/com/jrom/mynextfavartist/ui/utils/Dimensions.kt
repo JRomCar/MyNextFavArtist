@@ -27,12 +27,6 @@ object Dimensions {
     // Spacing
     val spacingMicro: Dp = 2.dp
     val spacingSmall: Dp = 4.dp
-    val spacingMedium: Dp = 8.dp
-    val spacingLarge: Dp = 16.dp
-
-    // List and Grid
-    val listContentPadding: Dp = 16.dp
-    val listItemSpacing: Dp = 8.dp
 
     // Icon Sizes
     val iconSizeSmall: Dp = 18.dp

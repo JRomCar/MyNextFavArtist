@@ -112,7 +112,7 @@ private fun SearchPromptContent(modifier: Modifier = Modifier) {
             Icon(
                 painter = painterResource(R.drawable.ic_search),
                 contentDescription = null,
-                modifier = Modifier.padding(bottom = Dimensions.spacingLarge),
+                modifier = Modifier.padding(bottom = Dimensions.paddingLarge),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(

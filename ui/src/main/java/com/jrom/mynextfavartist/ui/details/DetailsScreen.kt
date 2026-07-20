@@ -191,7 +191,7 @@ private fun ArtistDetailsCard(
     ) {
         Column(
             modifier = Modifier.padding(Dimensions.paddingXL),
-            verticalArrangement = Arrangement.spacedBy(Dimensions.spacingLarge)
+            verticalArrangement = Arrangement.spacedBy(Dimensions.paddingLarge)
         ) {
             Text(
                 text = stringResource(R.string.artist_details_title),
@@ -247,7 +247,7 @@ private fun LikeButton(
                 painter = painterResource(if (isFavorite) R.drawable.ic_check else R.drawable.ic_add),
                 contentDescription = null, // Icon description handled by button contentDescription
             )
-            Spacer(modifier = Modifier.width(Dimensions.spacingMedium))
+            Spacer(modifier = Modifier.width(Dimensions.paddingMedium))
             Text(stringResource(if (isFavorite) R.string.liked_artist_button else R.string.like_artist_button))
         }
     }
@@ -279,7 +279,7 @@ private fun AlbumsSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(Dimensions.listItemSpacing)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Dimensions.paddingMedium)) {
                         releaseGroups.data.forEach { releaseGroup ->
                             ReleaseGroupRow(releaseGroup = releaseGroup)
                         }
@@ -311,7 +311,7 @@ private fun ReleaseGroupRow(
             albumTitle = releaseGroup.title,
         )
 
-        Spacer(modifier = Modifier.width(Dimensions.spacingLarge))
+        Spacer(modifier = Modifier.width(Dimensions.paddingLarge))
 
         Column {
             Text(

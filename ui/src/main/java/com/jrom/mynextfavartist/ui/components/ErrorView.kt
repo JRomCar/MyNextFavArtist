@@ -70,7 +70,7 @@ private fun ErrorContent(
             tint = MaterialTheme.colorScheme.error
         )
 
-        Spacer(modifier = Modifier.height(Dimensions.spacingLarge))
+        Spacer(modifier = Modifier.height(Dimensions.paddingLarge))
 
         Text(
             text = error.errorText.asString(),
@@ -79,7 +79,7 @@ private fun ErrorContent(
             color = MaterialTheme.colorScheme.onSurface,
         )
 
-        Spacer(modifier = Modifier.height(Dimensions.spacingMedium))
+        Spacer(modifier = Modifier.height(Dimensions.paddingMedium))
 
         onRetryClick?.let { retry ->
             Button(

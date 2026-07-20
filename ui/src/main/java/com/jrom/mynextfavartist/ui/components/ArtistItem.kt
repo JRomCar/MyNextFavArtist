@@ -45,7 +45,7 @@ fun ArtistItem(
         ) {
             ArtistAvatar(artistName = artist.name)
 
-            Spacer(modifier = Modifier.width(Dimensions.spacingLarge))
+            Spacer(modifier = Modifier.width(Dimensions.paddingLarge))
 
             ArtistInformation(
                 modifier = Modifier.weight(1f),

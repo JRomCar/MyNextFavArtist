@@ -23,18 +23,18 @@ fun ArtistList(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     onArtistClick: (artist: Artist) -> Unit,
 ) {
-    val topPadding = Dimensions.listContentPadding + contentPadding.calculateTopPadding()
-    val bottomPadding = Dimensions.listContentPadding + contentPadding.calculateBottomPadding()
+    val topPadding = Dimensions.paddingLarge + contentPadding.calculateTopPadding()
+    val bottomPadding = Dimensions.paddingLarge + contentPadding.calculateBottomPadding()
     LazyColumn(
         modifier = modifier.consumeWindowInsets(contentPadding),
         state = rememberLazyListState(),
         contentPadding = PaddingValues(
-            start = Dimensions.listContentPadding,
-            end = Dimensions.listContentPadding,
+            start = Dimensions.paddingLarge,
+            end = Dimensions.paddingLarge,
             top = topPadding,
             bottom = bottomPadding,
         ),
-        verticalArrangement = Arrangement.spacedBy(Dimensions.listItemSpacing)
+        verticalArrangement = Arrangement.spacedBy(Dimensions.paddingMedium)
     ) {
         items(
             items = artists,
