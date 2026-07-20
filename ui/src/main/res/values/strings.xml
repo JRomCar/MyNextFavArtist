@@ -27,6 +27,12 @@
     <!-- SearchScreen strings -->
     <string name="search_screen_description">Search artists screen</string>
     <string name="search_prompt_title">Search for an artist</string>
+    <string name="search_placeholder">Search artists</string>
+
+    <!-- Navigation strings -->
+    <string name="home_tab_title">Home</string>
+    <string name="search_tab_title">Search</string>
+    <string name="favorites_tab_title">Favorites</string>
 
     <!-- FavoritesScreen strings -->
     <string name="no_favorites_title">No favorite artists yet</string>

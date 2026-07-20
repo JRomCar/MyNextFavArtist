@@ -25,6 +25,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import com.jrom.mynextfavartist.ui.R
@@ -48,7 +49,7 @@ fun SearchView(
                 .fillMaxWidth()
                 .focusRequester(focusRequester),
             placeholder = {
-                Text(text = "Search artists")
+                Text(text = stringResource(R.string.search_placeholder))
             },
             value = query,
             onValueChange = {

@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -39,6 +40,7 @@ fun MyNextFavArtistApp() {
             NavigationBar {
                 bottomNavItems.forEach { item ->
                     val selected = navigationViewModel.currentTopLevelKey == item
+                    val title = stringResource(item.titleRes)
                     NavigationBarItem(
                         selected = selected,
                         onClick = dropUnlessResumed {
@@ -47,11 +49,11 @@ fun MyNextFavArtistApp() {
                         icon = {
                             Icon(
                                 painter = painterResource(item.icon),
-                                contentDescription = item.title
+                                contentDescription = title
                             )
                         },
                         label = {
-                            Text(item.title)
+                            Text(title)
                         },
                     )
                 }
