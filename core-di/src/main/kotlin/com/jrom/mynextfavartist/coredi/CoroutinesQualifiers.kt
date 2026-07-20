@@ -1,4 +1,4 @@
-package com.jrom.mynextfavartist.domain.di
+package com.jrom.mynextfavartist.coredi
 
 import javax.inject.Qualifier
 

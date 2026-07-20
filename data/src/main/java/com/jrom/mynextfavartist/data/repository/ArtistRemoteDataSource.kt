@@ -5,7 +5,7 @@ import com.jrom.mynextfavartist.data.entities.ReleaseGroupData
 import com.jrom.mynextfavartist.data.util.mapThrowableToNetworkError
 import com.jrom.mynextfavartist.data.util.toDomain
 import com.jrom.mynextfavartist.domain.Result
-import com.jrom.mynextfavartist.domain.di.IoDispatcher
+import com.jrom.mynextfavartist.coredi.IoDispatcher
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.entities.ReleaseGroup
 import com.jrom.mynextfavartist.domain.error.DataError

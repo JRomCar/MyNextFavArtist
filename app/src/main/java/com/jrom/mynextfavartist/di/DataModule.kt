@@ -10,7 +10,7 @@ import com.jrom.mynextfavartist.data.repository.ArtistLocalDataSource
 import com.jrom.mynextfavartist.data.repository.ArtistRemoteDataSource
 import com.jrom.mynextfavartist.data.repository.ArtistRepositoryImpl
 import com.jrom.mynextfavartist.data.repository.HomeArtistsCacheDataSource
-import com.jrom.mynextfavartist.domain.di.IoDispatcher
+import com.jrom.mynextfavartist.coredi.IoDispatcher
 import com.jrom.mynextfavartist.domain.network.NetworkMonitor
 import com.jrom.mynextfavartist.domain.repository.ArtistRepository
 import com.jrom.mynextfavartist.domain.usecase.GetArtistReleaseGroups

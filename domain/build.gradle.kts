@@ -1,8 +1,6 @@
 plugins {
-    alias(libs.plugins.ksp)
     alias(libs.plugins.android.library)
     alias(libs.plugins.serialization)
-    alias(libs.plugins.hilt)
 }
 
 android {
@@ -37,8 +35,4 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.runtime)
     implementation(libs.kotlinx.serialization.json)
-
-    // Hilt
-    implementation(libs.hilt.dagger.android)
-    ksp(libs.hilt.dagger.compiler)
 }
