@@ -29,10 +29,10 @@ class MainActivity : ComponentActivity() {
         window.isNavigationBarContrastEnforced = false
         setContent {
             MyNextFavArtistTheme {
-                val networkStatus by networkMonitor.networkState.collectAsStateWithLifecycle(null)
+                val isOnline by networkMonitor.networkState.collectAsStateWithLifecycle(null)
 
                 Column(modifier = Modifier.fillMaxSize()) {
-                    if (networkStatus?.isOnline == false) {
+                    if (isOnline == false) {
                         NoConnectionBanner()
                     }
                     Box(modifier = Modifier.fillMaxSize()) {
