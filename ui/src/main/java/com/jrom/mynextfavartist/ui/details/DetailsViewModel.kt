@@ -4,8 +4,8 @@ import androidx.lifecycle.viewModelScope
 import com.jrom.mynextfavartist.domain.Result
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.error.DataError
-import com.jrom.mynextfavartist.domain.usecase.CheckIfArtistIsFavorite
 import com.jrom.mynextfavartist.domain.usecase.GetArtistReleaseGroups
+import com.jrom.mynextfavartist.domain.usecase.ObserveIsFavorite
 import com.jrom.mynextfavartist.domain.usecase.RemoveFavoriteArtist
 import com.jrom.mynextfavartist.domain.usecase.SaveFavoriteArtist
 import com.jrom.mynextfavartist.ui.error.asUiIcon
@@ -14,17 +14,20 @@ import com.jrom.mynextfavartist.ui.states.BaseUiState
 import com.jrom.mynextfavartist.ui.states.BaseViewModel
 import com.jrom.mynextfavartist.ui.states.DetailsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class DetailsViewModel @Inject constructor(
-    private val checkIfArtistIsFavorite: CheckIfArtistIsFavorite,
+    private val observeIsFavorite: ObserveIsFavorite,
     private val saveFavoriteArtist: SaveFavoriteArtist,
     private val removeFavoriteArtist: RemoveFavoriteArtist,
     private val getArtistReleaseGroups: GetArtistReleaseGroups,
     initialState: DetailsUiState = DetailsUiState(),
 ) : BaseViewModel<DetailsUiState, DetailsUiEffect>(initialState) {
+
+    private var favoriteStatusJob: Job? = null
 
     fun handleAction(action: DetailsUiAction) {
         when (action) {
@@ -40,10 +43,13 @@ class DetailsViewModel @Inject constructor(
     }
 
     private fun checkFavoriteStatus(artistMbid: String) {
-        viewModelScope.launch {
-            when (val result = checkIfArtistIsFavorite(artistMbid)) {
-                is Result.Success -> updateState { it.copy(isFavorite = result.data) }
-                is Result.Error -> onDBAccessError(result.error)
+        favoriteStatusJob?.cancel()
+        favoriteStatusJob = viewModelScope.launch {
+            observeIsFavorite(artistMbid).collect { result ->
+                when (result) {
+                    is Result.Success -> updateState { it.copy(isFavorite = result.data) }
+                    is Result.Error -> onDBAccessError(result.error)
+                }
             }
         }
     }

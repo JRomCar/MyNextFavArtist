@@ -4,7 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.jrom.mynextfavartist.domain.Result
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.error.DataError
-import com.jrom.mynextfavartist.domain.usecase.GetAllFavoriteArtists
+import com.jrom.mynextfavartist.domain.usecase.ObserveFavoriteArtists
 import com.jrom.mynextfavartist.domain.usecase.RemoveAllFavoriteArtists
 import com.jrom.mynextfavartist.ui.error.asUiIcon
 import com.jrom.mynextfavartist.ui.error.asUiText
@@ -12,15 +12,18 @@ import com.jrom.mynextfavartist.ui.states.BaseUiEffect
 import com.jrom.mynextfavartist.ui.states.BaseUiState
 import com.jrom.mynextfavartist.ui.states.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class FavoritesViewModel @Inject constructor(
-    private val getAllFavoriteArtists: GetAllFavoriteArtists,
+    private val observeFavoriteArtists: ObserveFavoriteArtists,
     private val removeAllFavoriteArtists: RemoveAllFavoriteArtists,
     initialState: @JvmSuppressWildcards BaseUiState<List<Artist>> = BaseUiState.Initial,
 ) : BaseViewModel<BaseUiState<List<Artist>>, BaseUiEffect>(initialState) {
+
+    private var favoritesJob: Job? = null
 
     fun handleAction(action: FavoritesUiAction) {
         when (action) {
@@ -36,18 +39,23 @@ class FavoritesViewModel @Inject constructor(
 
     private fun loadFavoriteArtists() {
         setState(BaseUiState.Loading)
-        viewModelScope.launch {
-            when (val result = getAllFavoriteArtists()) {
-                is Result.Success -> {
-                    // An empty list falls back to Initial so the empty-state content
-                    // (EmptyFavoritesContent) renders instead of a bare "Delete All
-                    // Favorites" button over nothing.
-                    setState(
-                        if (result.data.isEmpty()) BaseUiState.Initial
-                        else BaseUiState.Success(result.data)
-                    )
+        // Cancel-and-relaunch so the screen's initial load and a manual retry after an
+        // error never stack multiple collectors on the same observeFavoriteArtists() flow.
+        favoritesJob?.cancel()
+        favoritesJob = viewModelScope.launch {
+            observeFavoriteArtists().collect { result ->
+                when (result) {
+                    is Result.Success -> {
+                        // An empty list falls back to Initial so the empty-state content
+                        // (EmptyFavoritesContent) renders instead of a bare "Delete All
+                        // Favorites" button over nothing.
+                        setState(
+                            if (result.data.isEmpty()) BaseUiState.Initial
+                            else BaseUiState.Success(result.data)
+                        )
+                    }
+                    is Result.Error -> onDBAccessError(result.error)
                 }
-                is Result.Error -> onDBAccessError(result.error)
             }
         }
     }

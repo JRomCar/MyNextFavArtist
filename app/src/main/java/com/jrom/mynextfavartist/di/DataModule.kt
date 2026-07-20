@@ -11,10 +11,10 @@ import com.jrom.mynextfavartist.data.repository.ArtistRepositoryImpl
 import com.jrom.mynextfavartist.domain.di.IoDispatcher
 import com.jrom.mynextfavartist.domain.network.NetworkMonitor
 import com.jrom.mynextfavartist.domain.repository.ArtistRepository
-import com.jrom.mynextfavartist.domain.usecase.CheckIfArtistIsFavorite
-import com.jrom.mynextfavartist.domain.usecase.GetAllFavoriteArtists
 import com.jrom.mynextfavartist.domain.usecase.GetArtistReleaseGroups
 import com.jrom.mynextfavartist.domain.usecase.GetHomeArtists
+import com.jrom.mynextfavartist.domain.usecase.ObserveFavoriteArtists
+import com.jrom.mynextfavartist.domain.usecase.ObserveIsFavorite
 import com.jrom.mynextfavartist.domain.usecase.RemoveAllFavoriteArtists
 import com.jrom.mynextfavartist.domain.usecase.RemoveFavoriteArtist
 import com.jrom.mynextfavartist.domain.usecase.SaveFavoriteArtist
@@ -75,8 +75,8 @@ class DataModule {
 
     @Provides
     @Singleton
-    fun provideGetAllFavoriteArtistsUseCase(artistRepository: ArtistRepository): GetAllFavoriteArtists {
-        return GetAllFavoriteArtists(artistRepository)
+    fun provideObserveFavoriteArtistsUseCase(artistRepository: ArtistRepository): ObserveFavoriteArtists {
+        return ObserveFavoriteArtists(artistRepository)
     }
 
     @Provides
@@ -87,8 +87,8 @@ class DataModule {
 
     @Provides
     @Singleton
-    fun provideCheckIfArtistIsFavoriteUseCase(artistRepository: ArtistRepository): CheckIfArtistIsFavorite {
-        return CheckIfArtistIsFavorite(artistRepository)
+    fun provideObserveIsFavoriteUseCase(artistRepository: ArtistRepository): ObserveIsFavorite {
+        return ObserveIsFavorite(artistRepository)
     }
 
     @Provides

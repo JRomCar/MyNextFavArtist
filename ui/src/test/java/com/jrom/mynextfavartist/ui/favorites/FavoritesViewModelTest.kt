@@ -2,7 +2,7 @@ package com.jrom.mynextfavartist.ui.favorites
 
 import com.jrom.mynextfavartist.domain.Result
 import com.jrom.mynextfavartist.domain.error.DataError
-import com.jrom.mynextfavartist.domain.usecase.GetAllFavoriteArtists
+import com.jrom.mynextfavartist.domain.usecase.ObserveFavoriteArtists
 import com.jrom.mynextfavartist.domain.usecase.RemoveAllFavoriteArtists
 import com.jrom.mynextfavartist.testutils.TestBase
 import com.jrom.mynextfavartist.ui.MockData
@@ -13,6 +13,7 @@ import com.jrom.mynextfavartist.ui.states.BaseUiEffect
 import com.jrom.mynextfavartist.ui.states.BaseUiState
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.Before
@@ -23,7 +24,7 @@ import org.mockito.kotlin.whenever
 @OptIn(ExperimentalCoroutinesApi::class)
 class FavoritesViewModelTest : TestBase() {
 
-    private val getAllFavoriteArtists: GetAllFavoriteArtists = mock()
+    private val observeFavoriteArtists: ObserveFavoriteArtists = mock()
     private val removeAllFavoriteArtists: RemoveAllFavoriteArtists = mock()
 
     private lateinit var sut: FavoritesViewModel
@@ -33,14 +34,14 @@ class FavoritesViewModelTest : TestBase() {
     @Before
     fun setUp() {
         sut = FavoritesViewModel(
-            getAllFavoriteArtists = getAllFavoriteArtists,
+            observeFavoriteArtists = observeFavoriteArtists,
             removeAllFavoriteArtists = removeAllFavoriteArtists,
         )
     }
 
     @Test
     fun `loadFavoriteArtists success with results - uiState is Success with artists`() = runUnconfinedTest {
-        whenever(getAllFavoriteArtists()).thenReturn(Result.Success(artistsList))
+        whenever(observeFavoriteArtists()).thenReturn(flowOf(Result.Success(artistsList)))
 
         sut.handleAction(FavoritesUiAction.LoadArtists)
         advanceUntilIdle()
@@ -50,7 +51,7 @@ class FavoritesViewModelTest : TestBase() {
 
     @Test
     fun `loadFavoriteArtists success with empty list - uiState falls back to Initial`() = runUnconfinedTest {
-        whenever(getAllFavoriteArtists()).thenReturn(Result.Success(emptyList()))
+        whenever(observeFavoriteArtists()).thenReturn(flowOf(Result.Success(emptyList())))
 
         sut.handleAction(FavoritesUiAction.LoadArtists)
         advanceUntilIdle()
@@ -60,7 +61,7 @@ class FavoritesViewModelTest : TestBase() {
 
     @Test
     fun `loadFavoriteArtists failure - uiState is Error`() = runUnconfinedTest {
-        whenever(getAllFavoriteArtists()).thenReturn(Result.Error(DataError.Local.DB_READ_ERROR))
+        whenever(observeFavoriteArtists()).thenReturn(flowOf(Result.Error(DataError.Local.DB_READ_ERROR)))
 
         sut.handleAction(FavoritesUiAction.LoadArtists)
         advanceUntilIdle()

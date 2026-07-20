@@ -2,8 +2,8 @@ package com.jrom.mynextfavartist.ui.details
 
 import com.jrom.mynextfavartist.domain.Result
 import com.jrom.mynextfavartist.domain.error.DataError
-import com.jrom.mynextfavartist.domain.usecase.CheckIfArtistIsFavorite
 import com.jrom.mynextfavartist.domain.usecase.GetArtistReleaseGroups
+import com.jrom.mynextfavartist.domain.usecase.ObserveIsFavorite
 import com.jrom.mynextfavartist.domain.usecase.RemoveFavoriteArtist
 import com.jrom.mynextfavartist.domain.usecase.SaveFavoriteArtist
 import com.jrom.mynextfavartist.testutils.TestBase
@@ -11,6 +11,7 @@ import com.jrom.mynextfavartist.ui.MockData
 import com.jrom.mynextfavartist.ui.states.BaseUiState
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.Assert.assertFalse
@@ -22,7 +23,7 @@ import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DetailsViewModelTest : TestBase() {
-    private val checkIfArtistIsFavorite: CheckIfArtistIsFavorite = mock()
+    private val observeIsFavorite: ObserveIsFavorite = mock()
     private val saveFavoriteArtist: SaveFavoriteArtist = mock()
     private val removeFavoriteArtist: RemoveFavoriteArtist = mock()
     private val getArtistReleaseGroups: GetArtistReleaseGroups = mock()
@@ -34,7 +35,7 @@ class DetailsViewModelTest : TestBase() {
     @Before
     fun setUp() {
         sut = DetailsViewModel(
-            checkIfArtistIsFavorite = checkIfArtistIsFavorite,
+            observeIsFavorite = observeIsFavorite,
             saveFavoriteArtist = saveFavoriteArtist,
             removeFavoriteArtist = removeFavoriteArtist,
             getArtistReleaseGroups = getArtistReleaseGroups,
@@ -43,7 +44,7 @@ class DetailsViewModelTest : TestBase() {
 
     @Test
     fun `load artist details sets isFavorite and release groups`() = runUnconfinedTest {
-        whenever(checkIfArtistIsFavorite(artist.mbid)).thenReturn(Result.Success(true))
+        whenever(observeIsFavorite(artist.mbid)).thenReturn(flowOf(Result.Success(true)))
         whenever(getArtistReleaseGroups(artist.mbid)).thenReturn(
             Result.Success(MockData.testReleaseGroupsEntityList)
         )
@@ -61,7 +62,7 @@ class DetailsViewModelTest : TestBase() {
 
     @Test
     fun `release groups failure sets Error state`() = runUnconfinedTest {
-        whenever(checkIfArtistIsFavorite(artist.mbid)).thenReturn(Result.Success(false))
+        whenever(observeIsFavorite(artist.mbid)).thenReturn(flowOf(Result.Success(false)))
         whenever(getArtistReleaseGroups(artist.mbid)).thenReturn(
             Result.Error(DataError.Network.UNKNOWN)
         )
