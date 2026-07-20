@@ -3,6 +3,7 @@ package com.jrom.mynextfavartist.di
 import com.jrom.mynextfavartist.data.BuildConfig
 import com.jrom.mynextfavartist.data.api.MusicBrainzApi
 import com.jrom.mynextfavartist.data.api.interceptor.RateLimitInterceptor
+import com.jrom.mynextfavartist.data.api.interceptor.RetryInterceptor
 import com.jrom.mynextfavartist.data.api.interceptor.UserAgentInterceptor
 import dagger.Module
 import dagger.Provides
@@ -22,6 +23,9 @@ class NetworkModule {
     @Singleton
     fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
         .addInterceptor(UserAgentInterceptor("MyNextFavArtist/1.0 (${BuildConfig.MUSICBRAINZ_CONTACT})"))
+        // RetryInterceptor must come before RateLimitInterceptor so each retried attempt -
+        // not just the first one - is paced by the rate limiter too.
+        .addInterceptor(RetryInterceptor())
         .addInterceptor(RateLimitInterceptor())
         .apply {
             // Only log HTTP traffic in debug builds.

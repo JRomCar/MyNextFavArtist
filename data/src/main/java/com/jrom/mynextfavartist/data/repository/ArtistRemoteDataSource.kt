@@ -3,7 +3,6 @@ package com.jrom.mynextfavartist.data.repository
 import com.jrom.mynextfavartist.data.api.MusicBrainzApi
 import com.jrom.mynextfavartist.data.entities.ReleaseGroupData
 import com.jrom.mynextfavartist.data.util.mapThrowableToNetworkError
-import com.jrom.mynextfavartist.data.util.retryOnTransientFailure
 import com.jrom.mynextfavartist.data.util.toDomain
 import com.jrom.mynextfavartist.domain.Result
 import com.jrom.mynextfavartist.domain.di.IoDispatcher
@@ -29,9 +28,7 @@ class ArtistRemoteDataSource(
         offset: Int,
     ): Result<List<Artist>, DataError.Network> = withContext(ioDispatcher) {
         return@withContext try {
-            val response = retryOnTransientFailure {
-                musicBrainzApi.searchArtists(query = query, limit = limit, offset = offset)
-            }
+            val response = musicBrainzApi.searchArtists(query = query, limit = limit, offset = offset)
             Result.Success(response.artists?.mapNotNull { it.toDomain() } ?: emptyList())
         } catch (e: CancellationException) {
             throw e
@@ -62,9 +59,10 @@ class ArtistRemoteDataSource(
         val allReleaseGroups = mutableListOf<ReleaseGroupData>()
         var pagesFetched = 0
         while (pagesFetched < MAX_RELEASE_GROUP_PAGES) {
-            val response = retryOnTransientFailure {
-                musicBrainzApi.getReleaseGroupsForArtist(artistMbid = artistMbid, offset = allReleaseGroups.size)
-            }
+            val response = musicBrainzApi.getReleaseGroupsForArtist(
+                artistMbid = artistMbid,
+                offset = allReleaseGroups.size,
+            )
             pagesFetched++
             val page = response.releaseGroups.orEmpty()
             if (page.isEmpty()) break
