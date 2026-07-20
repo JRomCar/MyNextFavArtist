@@ -18,8 +18,9 @@ class SearchArtists(private val artistRepository: ArtistRepository) {
 
 // MusicBrainz's `query` param is a Lucene expression, so free-text user input (e.g. "AC/DC",
 // "Panic! At The Disco") must have Lucene's reserved characters escaped before being sent, or
-// the API rejects it with a 400. GetHomeArtists deliberately builds its own Lucene expression
-// (`arid:(id1 OR id2)`) and calls the repository directly, bypassing this escaping on purpose.
+// the API rejects it with a 400. ArtistRepositoryImpl.getHomeArtists() deliberately builds its
+// own Lucene expression (`arid:(id1 OR id2)`) and calls the remote data source directly,
+// bypassing this escaping on purpose.
 private val LUCENE_SPECIAL_CHARS = "+-&|!(){}[]^\"~*?:\\/".toSet()
 
 private fun String.escapeLucene(): String = buildString {
