@@ -1,8 +1,8 @@
 package com.jrom.mynextfavartist.ui.home
 
 import androidx.lifecycle.viewModelScope
-import com.jrom.mynextfavartist.domain.Result
 import com.jrom.mynextfavartist.domain.entities.Artist
+import com.jrom.mynextfavartist.domain.fold
 import com.jrom.mynextfavartist.domain.usecase.GetHomeArtists
 import com.jrom.mynextfavartist.ui.error.asUiIcon
 import com.jrom.mynextfavartist.ui.error.asUiText
@@ -42,15 +42,14 @@ class HomeViewModel @Inject constructor(
             setState(BaseUiState.Loading)
         }
         viewModelScope.launch {
-            when (val result = getHomeArtists()) {
-                is Result.Success -> setState(BaseUiState.Success(result.data))
-                is Result.Error -> {
+            getHomeArtists().fold(
+                onSuccess = { setState(BaseUiState.Success(it)) },
+                onFailure = { error ->
                     if (cachedArtists == null) {
-                        val error = result.error
                         setState(BaseUiState.Error(error.asUiText(), error.asUiIcon()))
                     }
-                }
-            }
+                },
+            )
         }
     }
 }

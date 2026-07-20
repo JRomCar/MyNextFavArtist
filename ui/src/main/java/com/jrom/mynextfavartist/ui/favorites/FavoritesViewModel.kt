@@ -1,9 +1,9 @@
 package com.jrom.mynextfavartist.ui.favorites
 
 import androidx.lifecycle.viewModelScope
-import com.jrom.mynextfavartist.domain.Result
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.error.DataError
+import com.jrom.mynextfavartist.domain.fold
 import com.jrom.mynextfavartist.domain.usecase.ObserveFavoriteArtists
 import com.jrom.mynextfavartist.domain.usecase.RemoveAllFavoriteArtists
 import com.jrom.mynextfavartist.ui.error.asUiIcon
@@ -44,18 +44,15 @@ class FavoritesViewModel @Inject constructor(
         favoritesJob?.cancel()
         favoritesJob = viewModelScope.launch {
             observeFavoriteArtists().collect { result ->
-                when (result) {
-                    is Result.Success -> {
+                result.fold(
+                    onSuccess = { artists ->
                         // An empty list falls back to Initial so the empty-state content
                         // (EmptyFavoritesContent) renders instead of a bare "Delete All
                         // Favorites" button over nothing.
-                        setState(
-                            if (result.data.isEmpty()) BaseUiState.Initial
-                            else BaseUiState.Success(result.data)
-                        )
-                    }
-                    is Result.Error -> onDBAccessError(result.error)
-                }
+                        setState(if (artists.isEmpty()) BaseUiState.Initial else BaseUiState.Success(artists))
+                    },
+                    onFailure = ::onDBAccessError,
+                )
             }
         }
     }
@@ -63,10 +60,10 @@ class FavoritesViewModel @Inject constructor(
     private fun removeAllFavorites() {
         setState(BaseUiState.Loading)
         viewModelScope.launch {
-            when (val result = removeAllFavoriteArtists()) {
-                is Result.Success -> setState(BaseUiState.Initial)
-                is Result.Error -> onDBAccessError(result.error)
-            }
+            removeAllFavoriteArtists().fold(
+                onSuccess = { setState(BaseUiState.Initial) },
+                onFailure = ::onDBAccessError,
+            )
         }
     }
 

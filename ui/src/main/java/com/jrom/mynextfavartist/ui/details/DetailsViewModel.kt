@@ -1,9 +1,9 @@
 package com.jrom.mynextfavartist.ui.details
 
 import androidx.lifecycle.viewModelScope
-import com.jrom.mynextfavartist.domain.Result
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.error.DataError
+import com.jrom.mynextfavartist.domain.fold
 import com.jrom.mynextfavartist.domain.usecase.GetArtistReleaseGroups
 import com.jrom.mynextfavartist.domain.usecase.ObserveIsFavorite
 import com.jrom.mynextfavartist.domain.usecase.RemoveFavoriteArtist
@@ -46,10 +46,10 @@ class DetailsViewModel @Inject constructor(
         favoriteStatusJob?.cancel()
         favoriteStatusJob = viewModelScope.launch {
             observeIsFavorite(artistMbid).collect { result ->
-                when (result) {
-                    is Result.Success -> updateState { it.copy(isFavorite = result.data) }
-                    is Result.Error -> onDBAccessError(result.error)
-                }
+                result.fold(
+                    onSuccess = { isFavorite -> updateState { it.copy(isFavorite = isFavorite) } },
+                    onFailure = ::onDBAccessError,
+                )
             }
         }
     }
@@ -57,13 +57,14 @@ class DetailsViewModel @Inject constructor(
     private fun loadReleaseGroups(artistMbid: String) {
         updateState { it.copy(releaseGroups = BaseUiState.Loading) }
         viewModelScope.launch {
-            when (val result = getArtistReleaseGroups(artistMbid)) {
-                is Result.Success -> updateState { it.copy(releaseGroups = BaseUiState.Success(result.data)) }
-                is Result.Error -> {
-                    val error = result.error
+            getArtistReleaseGroups(artistMbid).fold(
+                onSuccess = { releaseGroups ->
+                    updateState { it.copy(releaseGroups = BaseUiState.Success(releaseGroups)) }
+                },
+                onFailure = { error ->
                     updateState { it.copy(releaseGroups = BaseUiState.Error(error.asUiText(), error.asUiIcon())) }
-                }
-            }
+                },
+            )
         }
     }
 
@@ -78,19 +79,19 @@ class DetailsViewModel @Inject constructor(
 
     private fun removeFavorite(artist: Artist) {
         viewModelScope.launch {
-            when (val result = removeFavoriteArtist(artist.mbid)) {
-                is Result.Success -> updateState { it.copy(isFavorite = false, isFavoriteActionInProgress = false) }
-                is Result.Error -> onFavoriteActionError(result.error)
-            }
+            removeFavoriteArtist(artist.mbid).fold(
+                onSuccess = { updateState { it.copy(isFavorite = false, isFavoriteActionInProgress = false) } },
+                onFailure = ::onFavoriteActionError,
+            )
         }
     }
 
     private fun saveFavorite(artist: Artist) {
         viewModelScope.launch {
-            when (val result = saveFavoriteArtist(artist)) {
-                is Result.Success -> updateState { it.copy(isFavorite = true, isFavoriteActionInProgress = false) }
-                is Result.Error -> onFavoriteActionError(result.error)
-            }
+            saveFavoriteArtist(artist).fold(
+                onSuccess = { updateState { it.copy(isFavorite = true, isFavoriteActionInProgress = false) } },
+                onFailure = ::onFavoriteActionError,
+            )
         }
     }
 

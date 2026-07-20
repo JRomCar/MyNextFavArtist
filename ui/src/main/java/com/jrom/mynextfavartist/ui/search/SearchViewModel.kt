@@ -2,9 +2,9 @@ package com.jrom.mynextfavartist.ui.search
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.jrom.mynextfavartist.domain.Result
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.error.DataError
+import com.jrom.mynextfavartist.domain.fold
 import com.jrom.mynextfavartist.domain.usecase.SearchArtists
 import com.jrom.mynextfavartist.ui.error.asUiIcon
 import com.jrom.mynextfavartist.ui.error.asUiText
@@ -56,13 +56,10 @@ class SearchViewModel @Inject constructor(
             .onEach { setState(BaseUiState.Loading) }
             .flatMapLatest { query ->
                 searchArtists(query).map { result ->
-                    when (result) {
-                        is Result.Success -> setState(BaseUiState.Success(result.data))
-                        is Result.Error -> {
-                            val error = result.error
-                            setState(BaseUiState.Error(error.asUiText(), error.asUiIcon()))
-                        }
-                    }
+                    result.fold(
+                        onSuccess = { setState(BaseUiState.Success(it)) },
+                        onFailure = { error -> setState(BaseUiState.Error(error.asUiText(), error.asUiIcon())) },
+                    )
                 }
             }.catch {
                 val error = DataError.Network.UNKNOWN
