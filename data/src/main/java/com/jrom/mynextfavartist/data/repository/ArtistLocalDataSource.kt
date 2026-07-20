@@ -6,6 +6,7 @@ import com.jrom.mynextfavartist.data.util.toDomain
 import com.jrom.mynextfavartist.domain.Result
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.error.DataError
+import kotlinx.coroutines.CancellationException
 
 class ArtistLocalDataSource(
     private val artistDao: ArtistDao,
@@ -14,6 +15,8 @@ class ArtistLocalDataSource(
     override suspend fun getAllArtists(): Result<List<Artist>, DataError.Local> =
         try {
             Result.Success(artistDao.getAllArtists().map { it.toDomain() })
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             Result.Error(DataError.Local.DB_READ_ERROR)
         }
@@ -22,6 +25,8 @@ class ArtistLocalDataSource(
         try {
             val rowId = artistDao.saveArtist(artist.toDb())
             Result.Success(rowId != -1L)
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             Result.Error(DataError.Local.DB_WRITE_ERROR)
         }
@@ -30,6 +35,8 @@ class ArtistLocalDataSource(
         try {
             val rowsDeleted = artistDao.removeArtist(artistMbid)
             Result.Success(rowsDeleted > 0)
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             Result.Error(DataError.Local.DB_WRITE_ERROR)
         }
@@ -38,6 +45,8 @@ class ArtistLocalDataSource(
         try {
             artistDao.clearArtists()
             Result.Success(true)
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             Result.Error(DataError.Local.DB_WRITE_ERROR)
         }
@@ -45,6 +54,8 @@ class ArtistLocalDataSource(
     override suspend fun checkIfArtistIsFavorite(artistMbid: String): Result<Boolean, DataError.Local> =
         try {
             Result.Success(artistDao.getArtist(artistMbid) != null)
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             Result.Error(DataError.Local.DB_READ_ERROR)
         }
