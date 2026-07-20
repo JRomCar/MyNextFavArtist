@@ -35,6 +35,10 @@ android {
     }
 }
 
+composeCompiler {
+    stabilityConfigurationFiles.add(layout.projectDirectory.file("compose_compiler_config.conf"))
+}
+
 dependencies {
     testImplementation(project(":test-utils"))
     implementation(project(":domain"))

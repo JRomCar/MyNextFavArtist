@@ -31,6 +31,5 @@ android {
 dependencies {
     testImplementation(project(":test-utils"))
 
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.runtime)
+    implementation(libs.kotlinx.coroutines.core)
 }
