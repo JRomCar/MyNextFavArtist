@@ -34,13 +34,21 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun loadHomeArtists() {
-        setState(BaseUiState.Loading)
+        val cachedArtists = uiState.value as? BaseUiState.Success<List<Artist>>
+        // Every navigation back to Home re-triggers this load. If we already have a list on
+        // screen, keep showing it during the fetch and on failure - MusicBrainz has transient
+        // outages, and re-showing a stale list beats replacing a working screen with an error.
+        if (cachedArtists == null) {
+            setState(BaseUiState.Loading)
+        }
         viewModelScope.launch {
             when (val result = getHomeArtists()) {
                 is Result.Success -> setState(BaseUiState.Success(result.data))
                 is Result.Error -> {
-                    val error = result.error
-                    setState(BaseUiState.Error(error.asUiText(), error.asUiIcon()))
+                    if (cachedArtists == null) {
+                        val error = result.error
+                        setState(BaseUiState.Error(error.asUiText(), error.asUiIcon()))
+                    }
                 }
             }
         }

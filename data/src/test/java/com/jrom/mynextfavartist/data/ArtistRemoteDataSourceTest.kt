@@ -17,11 +17,14 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
 import java.net.SocketTimeoutException
+import javax.net.ssl.SSLHandshakeException
 
 class ArtistRemoteDataSourceTest : TestBase() {
 
@@ -98,6 +101,31 @@ class ArtistRemoteDataSourceTest : TestBase() {
 
         assertTrue(result.isFailure)
         assertEquals(DataError.Network.UNKNOWN, result.errorOrNull)
+    }
+
+    @Test
+    fun `searchArtists retries and succeeds after a transient SSL handshake failure`() = runUnconfinedTest {
+        whenever(musicBrainzApi.searchArtists(any(), any(), any(), any()))
+            .thenAnswer { throw SSLHandshakeException("connection closed") }
+            .thenReturn(testArtistSearchResponse)
+
+        val result = sut.searchArtists("query", 30, 0)
+
+        assertTrue(result.isSuccess)
+        assertEquals(testArtistsEntityList, result.dataOrNull)
+        verify(musicBrainzApi, times(2)).searchArtists(any(), any(), any(), any())
+    }
+
+    @Test
+    fun `searchArtists does not retry on a non-transient 400`() = runUnconfinedTest {
+        whenever(musicBrainzApi.searchArtists(any(), any(), any(), any()))
+            .thenThrow(createHttpException(400))
+
+        val result = sut.searchArtists("query", 30, 0)
+
+        assertTrue(result.isFailure)
+        assertEquals(DataError.Network.BAD_REQUEST, result.errorOrNull)
+        verify(musicBrainzApi, times(1)).searchArtists(any(), any(), any(), any())
     }
 
     @Test

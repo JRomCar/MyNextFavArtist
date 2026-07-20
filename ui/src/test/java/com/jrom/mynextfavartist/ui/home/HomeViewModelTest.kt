@@ -57,6 +57,20 @@ class HomeViewModelTest : TestBase() {
     }
 
     @Test
+    fun `reload failure after a prior success keeps showing the cached list`() = runUnconfinedTest {
+        whenever(getHomeArtists()).thenReturn(Result.Success(artistsList))
+        sut.handleAction(HomeUiAction.LoadArtists)
+        advanceUntilIdle()
+        assertEquals(BaseUiState.Success(artistsList), sut.uiState.value)
+
+        whenever(getHomeArtists()).thenReturn(Result.Error(DataError.Network.UNKNOWN))
+        sut.handleAction(HomeUiAction.LoadArtists)
+        advanceUntilIdle()
+
+        assertEquals(BaseUiState.Success(artistsList), sut.uiState.value)
+    }
+
+    @Test
     fun `artist clicked emits navigate ui effect`() = runUnconfinedTest {
         val emissions = mutableListOf<BaseUiEffect>()
         val effectJob = launch(unconfinedTestDispatcher) {
