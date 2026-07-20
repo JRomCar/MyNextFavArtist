@@ -3,6 +3,7 @@ package com.jrom.mynextfavartist.data.network
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
+import android.net.NetworkCapabilities
 import com.jrom.mynextfavartist.domain.network.NetworkMonitor
 import com.jrom.mynextfavartist.domain.network.NetworkState
 import kotlinx.coroutines.channels.awaitClose
@@ -35,16 +36,22 @@ class NetworkMonitorImpl(
         trySend(createNetworkStatus(isNetworkAvailable()))
 
         val callback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                super.onAvailable(network)
-                trySend(createNetworkStatus(true))
-                lastKnownStateWasOffline = false
-            }
-
             override fun onLost(network: Network) {
                 super.onLost(network)
                 trySend(createNetworkStatus(false))
                 lastKnownStateWasOffline = true
+            }
+
+            // onAvailable fires as soon as a network is selected, before it's confirmed to
+            // actually have internet access (e.g. a captive-portal Wi-Fi). onCapabilitiesChanged
+            // is the callback that reports the validated capabilities, so it's the accurate
+            // "is this network actually usable" signal - it fires once with the initial
+            // capabilities right after onAvailable, and again on every later change.
+            override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
+                super.onCapabilitiesChanged(network, capabilities)
+                val isOnline = capabilities.hasInternet()
+                trySend(createNetworkStatus(isOnline))
+                lastKnownStateWasOffline = !isOnline
             }
         }
 
@@ -55,5 +62,12 @@ class NetworkMonitorImpl(
         }
     }.distinctUntilChanged()
 
-    fun isNetworkAvailable(): Boolean = connectivityManager.activeNetwork != null
+    private fun isNetworkAvailable(): Boolean {
+        val network = connectivityManager.activeNetwork ?: return false
+        return connectivityManager.getNetworkCapabilities(network)?.hasInternet() ?: false
+    }
+
+    private fun NetworkCapabilities.hasInternet(): Boolean =
+        hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+            hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
 }
