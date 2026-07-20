@@ -38,6 +38,10 @@ android {
     }
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     testImplementation(project(":test-utils"))
     api(project(":domain"))
