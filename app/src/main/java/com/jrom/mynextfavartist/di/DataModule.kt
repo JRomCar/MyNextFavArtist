@@ -3,11 +3,13 @@ package com.jrom.mynextfavartist.di
 import android.content.Context
 import com.jrom.mynextfavartist.data.api.MusicBrainzApi
 import com.jrom.mynextfavartist.data.db.ArtistDao
+import com.jrom.mynextfavartist.data.db.HomeArtistCacheDao
 import com.jrom.mynextfavartist.data.network.NetworkMonitorImpl
 import com.jrom.mynextfavartist.data.repository.ArtistDataSource
 import com.jrom.mynextfavartist.data.repository.ArtistLocalDataSource
 import com.jrom.mynextfavartist.data.repository.ArtistRemoteDataSource
 import com.jrom.mynextfavartist.data.repository.ArtistRepositoryImpl
+import com.jrom.mynextfavartist.data.repository.HomeArtistsCacheDataSource
 import com.jrom.mynextfavartist.domain.di.IoDispatcher
 import com.jrom.mynextfavartist.domain.network.NetworkMonitor
 import com.jrom.mynextfavartist.domain.repository.ArtistRepository
@@ -48,11 +50,20 @@ class DataModule {
 
     @Provides
     @Singleton
+    fun provideHomeArtistsCacheDataSource(
+        homeArtistCacheDao: HomeArtistCacheDao,
+    ): ArtistDataSource.HomeCache {
+        return HomeArtistsCacheDataSource(homeArtistCacheDao)
+    }
+
+    @Provides
+    @Singleton
     fun provideArtistRepository(
         remote: ArtistDataSource.Remote,
         local: ArtistDataSource.Local,
+        homeCache: ArtistDataSource.HomeCache,
     ): ArtistRepository {
-        return ArtistRepositoryImpl(remote, local)
+        return ArtistRepositoryImpl(remote, local, homeCache)
     }
 
     @Provides

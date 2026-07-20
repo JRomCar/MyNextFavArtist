@@ -21,4 +21,14 @@ interface ArtistDataSource {
         suspend fun clearArtists(): EmptyResult<DataError.Local>
         fun observeIsFavorite(artistMbid: String): Flow<Result<Boolean, DataError.Local>>
     }
+
+    interface HomeCache {
+        /** Cached home artists no older than [maxAgeMillis], or null if there's no fresh entry. */
+        suspend fun getFreshHomeArtists(maxAgeMillis: Long): List<Artist>?
+
+        /** Whatever's cached regardless of age, or null if the cache is empty. */
+        suspend fun getStaleHomeArtists(): List<Artist>?
+
+        suspend fun replaceHomeArtists(artists: List<Artist>)
+    }
 }

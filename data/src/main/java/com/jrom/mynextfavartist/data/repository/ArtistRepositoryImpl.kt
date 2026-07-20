@@ -6,11 +6,18 @@ import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.entities.ReleaseGroup
 import com.jrom.mynextfavartist.domain.error.DataError
 import com.jrom.mynextfavartist.domain.repository.ArtistRepository
+import com.jrom.mynextfavartist.domain.usecase.SeedArtists
 import kotlinx.coroutines.flow.Flow
+
+// The seed list is a fixed set of well-known MBIDs - their metadata (name, type, country)
+// essentially never changes, so a day-long cache avoids a live request on every Home visit
+// without risking noticeably stale data.
+private const val HOME_ARTISTS_CACHE_TTL_MILLIS = 24 * 60 * 60 * 1000L
 
 class ArtistRepositoryImpl(
     private val remote: ArtistDataSource.Remote,
     private val local: ArtistDataSource.Local,
+    private val homeCache: ArtistDataSource.HomeCache,
 ) : ArtistRepository {
 
     override suspend fun searchArtists(
@@ -18,6 +25,22 @@ class ArtistRepositoryImpl(
         limit: Int,
         offset: Int,
     ): Result<List<Artist>, DataError.Network> = remote.searchArtists(query, limit, offset)
+
+    // OkHttp's HTTP cache never applies here (or to any endpoint in this app): heuristic
+    // freshness requires a query-string-free request URL, and every MusicBrainzApi call is
+    // @Query-based. A Room-backed cache is the only way to actually skip the network call.
+    override suspend fun getHomeArtists(): Result<List<Artist>, DataError.Network> {
+        homeCache.getFreshHomeArtists(HOME_ARTISTS_CACHE_TTL_MILLIS)?.let { return Result.Success(it) }
+
+        val seedQuery = SeedArtists.mbids.joinToString(separator = " OR ", prefix = "arid:(", postfix = ")")
+        return when (val result = remote.searchArtists(query = seedQuery, limit = SeedArtists.mbids.size, offset = 0)) {
+            is Result.Success -> {
+                homeCache.replaceHomeArtists(result.data)
+                result
+            }
+            is Result.Error -> homeCache.getStaleHomeArtists()?.let { Result.Success(it) } ?: result
+        }
+    }
 
     override suspend fun getArtistReleaseGroups(
         artistMbid: String,

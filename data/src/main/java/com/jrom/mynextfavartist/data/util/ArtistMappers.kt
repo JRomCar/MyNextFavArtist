@@ -2,6 +2,7 @@ package com.jrom.mynextfavartist.data.util
 
 import com.jrom.mynextfavartist.data.entities.ArtistData
 import com.jrom.mynextfavartist.data.entities.ArtistDbData
+import com.jrom.mynextfavartist.data.entities.HomeArtistCacheData
 import com.jrom.mynextfavartist.data.entities.ReleaseGroupData
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.entities.ReleaseGroup
@@ -34,6 +35,23 @@ fun Artist.toDb() = ArtistDbData(
     type = type,
     country = country,
     disambiguation = disambiguation,
+)
+
+fun HomeArtistCacheData.toDomain() = Artist(
+    mbid = mbid,
+    name = name,
+    type = type,
+    country = country,
+    disambiguation = disambiguation,
+)
+
+fun Artist.toHomeCacheData(cachedAt: Long) = HomeArtistCacheData(
+    mbid = mbid,
+    name = name,
+    type = type,
+    country = country,
+    disambiguation = disambiguation,
+    cachedAt = cachedAt,
 )
 
 // Returns null when id/title are missing - see ArtistData.toDomain() above.

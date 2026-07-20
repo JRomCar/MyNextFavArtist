@@ -15,6 +15,8 @@ interface ArtistRepository {
         offset: Int = 0,
     ): Result<List<Artist>, DataError.Network>
 
+    suspend fun getHomeArtists(): Result<List<Artist>, DataError.Network>
+
     suspend fun getArtistReleaseGroups(artistMbid: String): Result<List<ReleaseGroup>, DataError.Network>
 
     fun observeFavoriteArtists(): Flow<Result<List<Artist>, DataError.Local>>
