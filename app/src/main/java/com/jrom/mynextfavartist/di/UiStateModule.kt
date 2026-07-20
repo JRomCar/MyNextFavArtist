@@ -3,6 +3,7 @@ package com.jrom.mynextfavartist.di
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.ui.states.BaseUiState
 import com.jrom.mynextfavartist.ui.states.DetailsUiState
+import com.jrom.mynextfavartist.ui.states.HomeUiState
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,4 +18,7 @@ object UiStateModule {
 
     @Provides
     fun provideInitialDetailsUiState(): DetailsUiState = DetailsUiState()
+
+    @Provides
+    fun provideInitialHomeUiState(): HomeUiState = HomeUiState()
 }

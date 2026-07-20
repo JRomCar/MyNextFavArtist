@@ -21,6 +21,7 @@ import com.jrom.mynextfavartist.ui.components.LoadingView
 import com.jrom.mynextfavartist.ui.components.PullToRefresh
 import com.jrom.mynextfavartist.ui.states.BaseUiEffect
 import com.jrom.mynextfavartist.ui.states.BaseUiState
+import com.jrom.mynextfavartist.ui.states.HomeUiState
 import com.jrom.mynextfavartist.ui.utils.AccessibilityUtils
 import com.jrom.mynextfavartist.ui.utils.PreviewWrapper
 import com.jrom.mynextfavartist.ui.utils.collectWithEffect
@@ -60,25 +61,25 @@ fun HomeScreen(
 fun HomeContent(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    state: BaseUiState<List<Artist>>,
+    state: HomeUiState,
     onAction: (HomeUiAction) -> Unit,
 ) {
     PullToRefresh(
         modifier = modifier,
-        isRefreshing = state is BaseUiState.Loading,
+        isRefreshing = state.isRefreshing,
         onRefresh = { onAction(HomeUiAction.LoadArtists) },
     ) {
-        when (state) {
+        when (val artists = state.artists) {
             is BaseUiState.Success -> ArtistList(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = contentPadding,
-                artists = state.data,
+                artists = artists.data,
                 onArtistClick = { artist -> onAction(HomeUiAction.ArtistClicked(artist)) },
             )
 
             is BaseUiState.Error -> ErrorView(
                 modifier = Modifier.fillMaxSize(),
-                error = state,
+                error = artists,
                 onRetryClick = { onAction(HomeUiAction.LoadArtists) },
             )
 
@@ -93,7 +94,7 @@ fun HomeContent(
 private fun HomeContentPreview() {
     PreviewWrapper {
         HomeContent(
-            state = BaseUiState.Success(previewArtists),
+            state = HomeUiState(artists = BaseUiState.Success(previewArtists)),
             onAction = {},
         )
     }
@@ -105,7 +106,7 @@ private fun HomeContentPreview() {
 private fun HomeContentLoadingPreview() {
     PreviewWrapper {
         HomeContent(
-            state = BaseUiState.Loading,
+            state = HomeUiState(artists = BaseUiState.Loading),
             onAction = {},
         )
     }

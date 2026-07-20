@@ -9,6 +9,7 @@ import com.jrom.mynextfavartist.ui.error.asUiText
 import com.jrom.mynextfavartist.ui.states.BaseUiEffect
 import com.jrom.mynextfavartist.ui.states.BaseUiState
 import com.jrom.mynextfavartist.ui.states.BaseViewModel
+import com.jrom.mynextfavartist.ui.states.HomeUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -17,11 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getHomeArtists: GetHomeArtists,
-    // BaseUiState's declaration-site `out T` makes Dagger see the injected type as
-    // BaseUiState<? extends List<Artist>>, which doesn't match the concrete
-    // BaseUiState<List<Artist>> binding in UiStateModule without this annotation.
-    initialState: @JvmSuppressWildcards BaseUiState<List<Artist>> = BaseUiState.Initial,
-) : BaseViewModel<BaseUiState<List<Artist>>, BaseUiEffect>(initialState) {
+    initialState: HomeUiState = HomeUiState(),
+) : BaseViewModel<HomeUiState, BaseUiEffect>(initialState) {
 
     private var loadHomeArtistsJob: Job? = null
 
@@ -37,22 +35,36 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun loadHomeArtists() {
-        val cachedArtists = uiState.value as? BaseUiState.Success<List<Artist>>
+        val cachedArtists = uiState.value.artists as? BaseUiState.Success<List<Artist>>
         // Every navigation back to Home re-triggers this load. If we already have a list on
         // screen, keep showing it during the fetch and on failure - MusicBrainz has transient
         // outages, and re-showing a stale list beats replacing a working screen with an error.
-        if (cachedArtists == null) {
-            setState(BaseUiState.Loading)
+        // isRefreshing is set regardless, so PullToRefresh's indicator reflects the in-flight
+        // request even when the cached list means `artists` itself doesn't move to Loading.
+        updateState {
+            it.copy(
+                artists = if (cachedArtists == null) BaseUiState.Loading else it.artists,
+                isRefreshing = true,
+            )
         }
         // Cancel-and-relaunch so pull-to-refresh/retry never stack concurrent requests
         // against a 1 req/sec API with last-writer-wins.
         loadHomeArtistsJob?.cancel()
         loadHomeArtistsJob = viewModelScope.launch {
             getHomeArtists().fold(
-                onSuccess = { setState(BaseUiState.Success(it)) },
+                onSuccess = { artists ->
+                    updateState { it.copy(artists = BaseUiState.Success(artists), isRefreshing = false) }
+                },
                 onFailure = { error ->
-                    if (cachedArtists == null) {
-                        setState(BaseUiState.Error(error.asUiText(), error.asUiIcon()))
+                    updateState {
+                        it.copy(
+                            artists = if (cachedArtists == null) {
+                                BaseUiState.Error(error.asUiText(), error.asUiIcon())
+                            } else {
+                                it.artists
+                            },
+                            isRefreshing = false,
+                        )
                     }
                 },
             )

@@ -40,7 +40,8 @@ class HomeViewModelTest : TestBase() {
         sut.handleAction(HomeUiAction.LoadArtists)
         advanceUntilIdle()
 
-        assertEquals(BaseUiState.Success(artistsList), sut.uiState.value)
+        assertEquals(BaseUiState.Success(artistsList), sut.uiState.value.artists)
+        assertEquals(false, sut.uiState.value.isRefreshing)
     }
 
     @Test
@@ -50,10 +51,11 @@ class HomeViewModelTest : TestBase() {
         sut.handleAction(HomeUiAction.LoadArtists)
         advanceUntilIdle()
 
-        val errorState = sut.uiState.value as BaseUiState.Error
+        val errorState = sut.uiState.value.artists as BaseUiState.Error
         val errorText = errorState.errorText as UiText.StringResource
         assertEquals(R.string.unknown_error, errorText.id)
         assertEquals(DataError.Network.UNKNOWN.asUiIcon(), errorState.errorIcon)
+        assertEquals(false, sut.uiState.value.isRefreshing)
     }
 
     @Test
@@ -61,13 +63,35 @@ class HomeViewModelTest : TestBase() {
         whenever(getHomeArtists()).thenReturn(Result.Success(artistsList))
         sut.handleAction(HomeUiAction.LoadArtists)
         advanceUntilIdle()
-        assertEquals(BaseUiState.Success(artistsList), sut.uiState.value)
+        assertEquals(BaseUiState.Success(artistsList), sut.uiState.value.artists)
 
         whenever(getHomeArtists()).thenReturn(Result.Failure(DataError.Network.UNKNOWN))
         sut.handleAction(HomeUiAction.LoadArtists)
         advanceUntilIdle()
 
-        assertEquals(BaseUiState.Success(artistsList), sut.uiState.value)
+        assertEquals(BaseUiState.Success(artistsList), sut.uiState.value.artists)
+        assertEquals(false, sut.uiState.value.isRefreshing)
+    }
+
+    @Test
+    fun `refreshing a populated list sets isRefreshing without clearing the cached list`() = runUnconfinedTest {
+        whenever(getHomeArtists()).thenReturn(Result.Success(artistsList))
+        sut.handleAction(HomeUiAction.LoadArtists)
+        advanceUntilIdle()
+        assertEquals(BaseUiState.Success(artistsList), sut.uiState.value.artists)
+
+        val states = mutableListOf<Boolean>()
+        val job = launch(unconfinedTestDispatcher) {
+            sut.uiState.collect { states.add(it.isRefreshing) }
+        }
+
+        sut.handleAction(HomeUiAction.LoadArtists)
+        advanceUntilIdle()
+
+        assertEquals(listOf(false, true, false), states)
+        assertEquals(BaseUiState.Success(artistsList), sut.uiState.value.artists)
+
+        job.cancel()
     }
 
     @Test
