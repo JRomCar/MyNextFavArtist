@@ -3,17 +3,25 @@ package com.jrom.mynextfavartist.ui.utils
 import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 
 @SuppressLint("ComposableNaming")
 @Composable
 fun <T> Flow<T>.collectWithEffect(effect: suspend (T) -> Unit) {
-    LaunchedEffect(key1 = Unit) {
-        onEach(effect).launchIn(this)
+    val currentEffect by rememberUpdatedState(effect)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val flow = this
+    LaunchedEffect(flow, lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            flow.collect { currentEffect(it) }
+        }
     }
 }
 
