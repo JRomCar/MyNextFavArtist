@@ -16,6 +16,3 @@ sealed class BaseUiState<out T> {
     data class Error(val errorText: UiText, @DrawableRes val errorIcon: Int) : BaseUiState<Nothing>()
     data class Success<T>(val data: T) : BaseUiState<T>()
 }
-
-val <T> BaseUiState<T>.isLoading: Boolean
-    get() = this is BaseUiState.Loading

@@ -64,9 +64,4 @@ class TopLevelBackStack<T : NavKey>(
         }
         updateBackStack()
     }
-
-    fun replaceStack(vararg keys: T) {
-        topLevelBackStacks[topLevelKey] = mutableStateListOf(*keys)
-        updateBackStack()
-    }
 }

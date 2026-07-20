@@ -52,11 +52,6 @@ class NavigationViewModel @Inject constructor(
         persist()
     }
 
-    fun replaceStack(vararg keys: NavKey) {
-        topLevelBackStack.replaceStack(*keys)
-        persist()
-    }
-
     private fun persist() {
         val state = SavedNavState(
             topLevelKey = topLevelBackStack.topLevelKey,
