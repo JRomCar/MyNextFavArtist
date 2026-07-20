@@ -27,7 +27,9 @@ import org.mockito.kotlin.whenever
 import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
+import java.net.ConnectException
 import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 class ArtistRemoteDataSourceTest : TestBase() {
 
@@ -60,6 +62,28 @@ class ArtistRemoteDataSourceTest : TestBase() {
 
         assertTrue(result.isFailure)
         assertEquals(DataError.Network.BAD_REQUEST, result.errorOrNull)
+    }
+
+    @Test
+    fun `searchArtists returns unauthorized error when API responds 401`() = runUnconfinedTest {
+        whenever(musicBrainzApi.searchArtists(any(), any(), any(), any()))
+            .thenThrow(createHttpException(401))
+
+        val result = sut.searchArtists("query", 30, 0)
+
+        assertTrue(result.isFailure)
+        assertEquals(DataError.Network.UNAUTHORIZED, result.errorOrNull)
+    }
+
+    @Test
+    fun `searchArtists returns unauthorized error when API responds 403`() = runUnconfinedTest {
+        whenever(musicBrainzApi.searchArtists(any(), any(), any(), any()))
+            .thenThrow(createHttpException(403))
+
+        val result = sut.searchArtists("query", 30, 0)
+
+        assertTrue(result.isFailure)
+        assertEquals(DataError.Network.UNAUTHORIZED, result.errorOrNull)
     }
 
     @Test
@@ -104,6 +128,28 @@ class ArtistRemoteDataSourceTest : TestBase() {
 
         assertTrue(result.isFailure)
         assertEquals(DataError.Network.UNKNOWN, result.errorOrNull)
+    }
+
+    @Test
+    fun `searchArtists returns no internet error on UnknownHostException`() = runUnconfinedTest {
+        whenever(musicBrainzApi.searchArtists(any(), any(), any(), any()))
+            .thenAnswer { throw UnknownHostException("musicbrainz.org") }
+
+        val result = sut.searchArtists("query", 30, 0)
+
+        assertTrue(result.isFailure)
+        assertEquals(DataError.Network.NO_INTERNET, result.errorOrNull)
+    }
+
+    @Test
+    fun `searchArtists returns no internet error on ConnectException`() = runUnconfinedTest {
+        whenever(musicBrainzApi.searchArtists(any(), any(), any(), any()))
+            .thenAnswer { throw ConnectException("Connection refused") }
+
+        val result = sut.searchArtists("query", 30, 0)
+
+        assertTrue(result.isFailure)
+        assertEquals(DataError.Network.NO_INTERNET, result.errorOrNull)
     }
 
     @Test

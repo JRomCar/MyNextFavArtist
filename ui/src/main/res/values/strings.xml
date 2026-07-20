@@ -5,6 +5,7 @@
     <string name="error_occurred_label">An error occurred</string>
     <string name="loading_label">Loading</string>
     <string name="bad_request">Invalid request</string>
+    <string name="unauthorized">Not authorized to perform this request</string>
     <string name="not_found">Not found</string>
     <string name="rate_limited">Too many requests, please wait a moment</string>
     <string name="request_timeout">The request timed out</string>
