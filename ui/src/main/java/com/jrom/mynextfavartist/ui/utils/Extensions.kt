@@ -8,9 +8,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 
 @SuppressLint("ComposableNaming")
 @Composable
@@ -24,9 +22,3 @@ fun <T> Flow<T>.collectWithEffect(effect: suspend (T) -> Unit) {
         }
     }
 }
-
-fun <T> singleSharedFlow() = MutableSharedFlow<T>(
-    replay = 0,
-    extraBufferCapacity = 1,
-    onBufferOverflow = BufferOverflow.DROP_OLDEST
-)
