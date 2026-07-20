@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -39,9 +38,7 @@ fun ErrorView(
     val errorDescription = stringResource(R.string.error_occurred_label)
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .semantics { contentDescription = errorDescription },
+        modifier = modifier.semantics { contentDescription = errorDescription },
         contentAlignment = Alignment.Center
     ) {
         ErrorContent(

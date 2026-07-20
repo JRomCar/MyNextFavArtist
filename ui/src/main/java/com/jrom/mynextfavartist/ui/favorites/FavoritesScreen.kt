@@ -93,7 +93,7 @@ fun FavoritesContent(
         BaseUiState.Loading, BaseUiState.Initial -> LoadingView(modifier = modifier)
 
         is BaseUiState.Error -> ErrorView(
-            modifier = modifier,
+            modifier = modifier.fillMaxSize(),
             error = state,
             onRetryClick = { onAction(LoadArtists) }
         )

@@ -287,7 +287,11 @@ private fun AlbumsSection(
                 }
             }
 
-            is BaseUiState.Error -> ErrorView(error = releaseGroups, onRetryClick = onRetryClick)
+            is BaseUiState.Error -> ErrorView(
+                modifier = Modifier.fillMaxSize(),
+                error = releaseGroups,
+                onRetryClick = onRetryClick,
+            )
             BaseUiState.Loading, BaseUiState.Initial, BaseUiState.Empty -> LoadingView()
         }
     }
