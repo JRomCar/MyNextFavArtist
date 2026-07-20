@@ -1,5 +1,6 @@
 package com.jrom.mynextfavartist.di
 
+import android.content.Context
 import com.jrom.mynextfavartist.data.BuildConfig
 import com.jrom.mynextfavartist.data.api.MusicBrainzApi
 import com.jrom.mynextfavartist.data.api.interceptor.RateLimitInterceptor
@@ -8,12 +9,18 @@ import com.jrom.mynextfavartist.data.api.interceptor.UserAgentInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.Cache
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.File
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
+
+private const val HTTP_CACHE_SIZE_BYTES = 5L * 1024 * 1024
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -21,12 +28,21 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
+    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient = OkHttpClient.Builder()
         .addInterceptor(UserAgentInterceptor("MyNextFavArtist/1.0 (${BuildConfig.MUSICBRAINZ_CONTACT})"))
         // RetryInterceptor must come before RateLimitInterceptor so each retried attempt -
         // not just the first one - is paced by the rate limiter too.
         .addInterceptor(RetryInterceptor())
         .addInterceptor(RateLimitInterceptor())
+        .connectTimeout(10.seconds)
+        .readTimeout(10.seconds)
+        .writeTimeout(10.seconds)
+        // callTimeout bounds the whole call, including time spent blocked inside
+        // RateLimitInterceptor/RetryInterceptor. Worst case is ~3 attempts at up to
+        // (1s rate-limit wait + 10s read) each, plus ~2s of retry backoff between them -
+        // comfortably under 45s.
+        .callTimeout(45.seconds)
+        .cache(Cache(File(context.cacheDir, "http_cache"), HTTP_CACHE_SIZE_BYTES))
         .apply {
             // Only log HTTP traffic in debug builds.
             if (BuildConfig.DEBUG) {
