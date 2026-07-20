@@ -1,35 +1,21 @@
 plugins {
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.jvm)
 }
 
-android {
-    namespace = "com.jrom.mynextfavartist.domain"
-    compileSdk = libs.versions.compileSdk.get().toInt()
-
-    defaultConfig {
-        minSdk = libs.versions.minSdk.get().toInt()
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+kotlin {
+    jvmToolchain(libs.versions.jdk.get().toInt())
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
 }
 
 dependencies {
-    testImplementation(project(":test-utils"))
-
     implementation(libs.kotlinx.coroutines.core)
+
+    // test-utils is an android.library (its InstantTaskExecutorRule dependency, core-testing,
+    // ships as an AAR that only AGP can unpack), so a plain kotlin("jvm") module can't consume
+    // it. domain's tests don't use TestBase/InstantTaskExecutorRule anyway - just these directly.
+    testImplementation(libs.junit)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
