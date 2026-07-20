@@ -12,6 +12,10 @@ import kotlinx.coroutines.flow.flow
  * `flatMapLatest`, cancelling any in-flight search when a newer query arrives.
  */
 class SearchArtists(private val artistRepository: ArtistRepository) {
-    operator fun invoke(query: String): Flow<Result<List<Artist>, DataError.Network>> =
-        flow { emit(artistRepository.searchArtists(query)) }
+    operator fun invoke(
+        query: String,
+        limit: Int = 30,
+        offset: Int = 0,
+    ): Flow<Result<List<Artist>, DataError.Network>> =
+        flow { emit(artistRepository.searchArtists(query, limit, offset)) }
 }
