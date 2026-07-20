@@ -11,15 +11,19 @@ import okhttp3.Response
  */
 class RateLimitInterceptor(private val minIntervalMs: Long = 1_000L) : Interceptor {
     private val lock = Any()
-    private var lastRequestAtMs = 0L
+    // nanoTime is monotonic and only meaningful for measuring elapsed time, unlike
+    // currentTimeMillis, which can jump backward on an NTP correction or manual clock
+    // change and stall every request until wall-clock time catches back up.
+    private var lastRequestAtNanos = 0L
 
     override fun intercept(chain: Interceptor.Chain): Response {
         synchronized(lock) {
-            val waitMs = minIntervalMs - (System.currentTimeMillis() - lastRequestAtMs)
+            val elapsedMs = (System.nanoTime() - lastRequestAtNanos) / 1_000_000
+            val waitMs = minIntervalMs - elapsedMs
             if (waitMs > 0) {
                 Thread.sleep(waitMs)
             }
-            lastRequestAtMs = System.currentTimeMillis()
+            lastRequestAtNanos = System.nanoTime()
         }
         return chain.proceed(chain.request())
     }
