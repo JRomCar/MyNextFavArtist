@@ -1,6 +1,5 @@
 package com.jrom.mynextfavartist.ui.home
 
-import androidx.lifecycle.viewModelScope
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.fold
 import com.jrom.mynextfavartist.domain.usecase.GetHomeArtists
@@ -11,16 +10,12 @@ import com.jrom.mynextfavartist.ui.states.BaseUiState
 import com.jrom.mynextfavartist.ui.states.BaseViewModel
 import com.jrom.mynextfavartist.ui.states.HomeUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getHomeArtists: GetHomeArtists,
 ) : BaseViewModel<HomeUiState, BaseUiEffect>(HomeUiState()) {
-
-    private var loadHomeArtistsJob: Job? = null
 
     fun handleAction(action: HomeUiAction) {
         when (action) {
@@ -48,8 +43,7 @@ class HomeViewModel @Inject constructor(
         }
         // Cancel-and-relaunch so pull-to-refresh/retry never stack concurrent requests
         // against a 1 req/sec API with last-writer-wins.
-        loadHomeArtistsJob?.cancel()
-        loadHomeArtistsJob = viewModelScope.launch {
+        launchExclusive(Key.HomeArtists) {
             getHomeArtists().fold(
                 onSuccess = { artists ->
                     updateState { it.copy(artists = BaseUiState.Success(artists), isRefreshing = false) }
@@ -69,4 +63,6 @@ class HomeViewModel @Inject constructor(
             )
         }
     }
+
+    private enum class Key { HomeArtists }
 }

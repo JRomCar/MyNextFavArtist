@@ -2,6 +2,8 @@ package com.jrom.mynextfavartist.ui.states
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +22,10 @@ abstract class BaseViewModel<State, Effect>(initialState: State) : ViewModel() {
     private val _uiEffect = Channel<Effect>(Channel.BUFFERED)
     val uiEffect = _uiEffect.receiveAsFlow()
 
+    // Keyed so two independent operations in the same ViewModel (e.g. DetailsViewModel's
+    // favorite-status collector and its release-groups load) can't cancel each other.
+    private val exclusiveJobs = mutableMapOf<Any, Job>()
+
     protected fun updateState(reducer: (State) -> State) {
         _uiState.update(reducer)
     }
@@ -32,5 +38,23 @@ abstract class BaseViewModel<State, Effect>(initialState: State) : ViewModel() {
         viewModelScope.launch {
             _uiEffect.send(effect)
         }
+    }
+
+    /**
+     * Launches [block] in viewModelScope, cancelling any work still running under the same
+     * [key]. Use for anything a retry, pull-to-refresh, or screen re-entry can re-trigger: a
+     * one-shot load, or an open Flow collection.
+     *
+     * A coroutine operator (collectLatest/flatMapLatest) gives this same cancel-and-relaunch
+     * behavior for free, but only when there's already a Flow to collect from -
+     * SearchViewModel's flatMapLatest works because typed queries arrive on a continuous
+     * StateFlow. The loads this guards are triggered by discrete UI actions (LoadArtists,
+     * LoadArtistDetails), not a continuous upstream source, so there's nothing to collectLatest
+     * over without inventing a trigger Flow purely to get the cancellation behavior - more
+     * machinery than this plain cancel-and-relaunch needs.
+     */
+    protected fun launchExclusive(key: Any, block: suspend CoroutineScope.() -> Unit) {
+        exclusiveJobs.remove(key)?.cancel()
+        exclusiveJobs[key] = viewModelScope.launch(block = block)
     }
 }

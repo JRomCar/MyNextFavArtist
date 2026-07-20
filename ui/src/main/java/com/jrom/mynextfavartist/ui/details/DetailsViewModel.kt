@@ -14,7 +14,6 @@ import com.jrom.mynextfavartist.ui.states.BaseUiState
 import com.jrom.mynextfavartist.ui.states.BaseViewModel
 import com.jrom.mynextfavartist.ui.states.DetailsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,9 +24,6 @@ class DetailsViewModel @Inject constructor(
     private val removeFavoriteArtist: RemoveFavoriteArtist,
     private val getArtistReleaseGroups: GetArtistReleaseGroups,
 ) : BaseViewModel<DetailsUiState, DetailsUiEffect>(DetailsUiState()) {
-
-    private var favoriteStatusJob: Job? = null
-    private var releaseGroupsJob: Job? = null
 
     fun handleAction(action: DetailsUiAction) {
         when (action) {
@@ -43,8 +39,7 @@ class DetailsViewModel @Inject constructor(
     }
 
     private fun checkFavoriteStatus(artistMbid: String) {
-        favoriteStatusJob?.cancel()
-        favoriteStatusJob = viewModelScope.launch {
+        launchExclusive(Key.FavoriteStatus) {
             observeIsFavorite(artistMbid).collect { result ->
                 result.fold(
                     onSuccess = { isFavorite -> updateState { it.copy(isFavorite = isFavorite) } },
@@ -56,8 +51,7 @@ class DetailsViewModel @Inject constructor(
 
     private fun loadReleaseGroups(artistMbid: String) {
         updateState { it.copy(releaseGroups = BaseUiState.Loading) }
-        releaseGroupsJob?.cancel()
-        releaseGroupsJob = viewModelScope.launch {
+        launchExclusive(Key.ReleaseGroups) {
             getArtistReleaseGroups(artistMbid).fold(
                 onSuccess = { releaseGroups ->
                     updateState { it.copy(releaseGroups = BaseUiState.Success(releaseGroups)) }
@@ -111,4 +105,6 @@ class DetailsViewModel @Inject constructor(
     private fun navigateBack() {
         sendEffect(DetailsUiEffect.NavigateBack)
     }
+
+    private enum class Key { FavoriteStatus, ReleaseGroups }
 }

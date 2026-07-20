@@ -12,7 +12,6 @@ import com.jrom.mynextfavartist.ui.states.BaseUiEffect
 import com.jrom.mynextfavartist.ui.states.BaseUiState
 import com.jrom.mynextfavartist.ui.states.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,8 +20,6 @@ class FavoritesViewModel @Inject constructor(
     private val observeFavoriteArtists: ObserveFavoriteArtists,
     private val removeAllFavoriteArtists: RemoveAllFavoriteArtists,
 ) : BaseViewModel<BaseUiState<List<Artist>>, BaseUiEffect>(BaseUiState.Initial) {
-
-    private var favoritesJob: Job? = null
 
     fun handleAction(action: FavoritesUiAction) {
         when (action) {
@@ -40,8 +37,7 @@ class FavoritesViewModel @Inject constructor(
         setState(BaseUiState.Loading)
         // Cancel-and-relaunch so the screen's initial load and a manual retry after an
         // error never stack multiple collectors on the same observeFavoriteArtists() flow.
-        favoritesJob?.cancel()
-        favoritesJob = viewModelScope.launch {
+        launchExclusive(Key.Favorites) {
             observeFavoriteArtists().collect { result ->
                 result.fold(
                     onSuccess = { artists ->
@@ -69,4 +65,6 @@ class FavoritesViewModel @Inject constructor(
     private fun onDBAccessError(error: DataError) {
         setState(BaseUiState.Error(error.asUiText(), error.asUiIcon()))
     }
+
+    private enum class Key { Favorites }
 }
