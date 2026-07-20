@@ -18,8 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getHomeArtists: GetHomeArtists,
-    initialState: HomeUiState = HomeUiState(),
-) : BaseViewModel<HomeUiState, BaseUiEffect>(initialState) {
+) : BaseViewModel<HomeUiState, BaseUiEffect>(HomeUiState()) {
 
     private var loadHomeArtistsJob: Job? = null
 

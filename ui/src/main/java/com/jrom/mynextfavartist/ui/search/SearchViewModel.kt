@@ -29,8 +29,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class SearchViewModel @Inject constructor(
     private val searchArtists: SearchArtists,
     private val savedStateHandle: SavedStateHandle,
-    initialState: @JvmSuppressWildcards BaseUiState<List<Artist>> = BaseUiState.Initial,
-) : BaseViewModel<BaseUiState<List<Artist>>, BaseUiEffect>(initialState) {
+) : BaseViewModel<BaseUiState<List<Artist>>, BaseUiEffect>(BaseUiState.Initial) {
 
     // Backed by SavedStateHandle so the typed query survives process death
     private val searchQuery: StateFlow<String> = savedStateHandle.getStateFlow(SEARCH_QUERY_KEY, "")

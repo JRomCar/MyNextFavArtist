@@ -20,8 +20,7 @@ import javax.inject.Inject
 class FavoritesViewModel @Inject constructor(
     private val observeFavoriteArtists: ObserveFavoriteArtists,
     private val removeAllFavoriteArtists: RemoveAllFavoriteArtists,
-    initialState: @JvmSuppressWildcards BaseUiState<List<Artist>> = BaseUiState.Initial,
-) : BaseViewModel<BaseUiState<List<Artist>>, BaseUiEffect>(initialState) {
+) : BaseViewModel<BaseUiState<List<Artist>>, BaseUiEffect>(BaseUiState.Initial) {
 
     private var favoritesJob: Job? = null
 

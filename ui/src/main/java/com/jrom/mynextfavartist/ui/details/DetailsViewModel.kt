@@ -24,8 +24,7 @@ class DetailsViewModel @Inject constructor(
     private val saveFavoriteArtist: SaveFavoriteArtist,
     private val removeFavoriteArtist: RemoveFavoriteArtist,
     private val getArtistReleaseGroups: GetArtistReleaseGroups,
-    initialState: DetailsUiState = DetailsUiState(),
-) : BaseViewModel<DetailsUiState, DetailsUiEffect>(initialState) {
+) : BaseViewModel<DetailsUiState, DetailsUiEffect>(DetailsUiState()) {
 
     private var favoriteStatusJob: Job? = null
     private var releaseGroupsJob: Job? = null
