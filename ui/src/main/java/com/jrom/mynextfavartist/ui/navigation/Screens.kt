@@ -1,7 +1,6 @@
 package com.jrom.mynextfavartist.ui.navigation
 
 import androidx.navigation3.runtime.NavKey
-import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.ui.R
 import kotlinx.serialization.Serializable
 
@@ -24,4 +23,4 @@ data object Search : NavKey, BottomNavItem {
 }
 
 @Serializable
-data class ArtistDetails(val artist: Artist) : NavKey
+data class ArtistDetails(val artist: ArtistNavArg) : NavKey

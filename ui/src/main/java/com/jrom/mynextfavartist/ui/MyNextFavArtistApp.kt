@@ -25,6 +25,8 @@ import com.jrom.mynextfavartist.ui.navigation.Favorites
 import com.jrom.mynextfavartist.ui.navigation.Home
 import com.jrom.mynextfavartist.ui.navigation.NavigationViewModel
 import com.jrom.mynextfavartist.ui.navigation.Search
+import com.jrom.mynextfavartist.ui.navigation.toDomain
+import com.jrom.mynextfavartist.ui.navigation.toNavArg
 import com.jrom.mynextfavartist.ui.search.SearchScreen
 
 @Composable
@@ -71,7 +73,7 @@ fun MyNextFavArtistApp() {
                         modifier = baseModifier,
                         contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding()),
                         onDetailClick = { artist ->
-                            navigationViewModel.addToStack(ArtistDetails(artist))
+                            navigationViewModel.addToStack(ArtistDetails(artist.toNavArg()))
                         },
                     )
                 }
@@ -80,7 +82,7 @@ fun MyNextFavArtistApp() {
                         modifier = baseModifier,
                         contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding()),
                         onDetailClick = { artist ->
-                            navigationViewModel.addToStack(ArtistDetails(artist))
+                            navigationViewModel.addToStack(ArtistDetails(artist.toNavArg()))
                         },
                     )
                 }
@@ -89,14 +91,14 @@ fun MyNextFavArtistApp() {
                         modifier = baseModifier,
                         contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding()),
                         onDetailClick = { artist ->
-                            navigationViewModel.addToStack(ArtistDetails(artist))
+                            navigationViewModel.addToStack(ArtistDetails(artist.toNavArg()))
                         },
                     )
                 }
                 entry<ArtistDetails> { args ->
                     DetailsScreen(
                         modifier = baseModifier.padding(bottom = innerPadding.calculateBottomPadding()),
-                        artist = args.artist,
+                        artist = args.artist.toDomain(),
                         onBackClick = dropUnlessResumed { navigationViewModel.navigateBack() },
                     )
                 }
