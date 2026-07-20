@@ -8,6 +8,7 @@ import com.jrom.mynextfavartist.domain.dataOrNull
 import com.jrom.mynextfavartist.domain.error.DataError
 import com.jrom.mynextfavartist.domain.errorOrNull
 import com.jrom.mynextfavartist.testutils.TestBase
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertEquals
@@ -43,6 +44,21 @@ class ArtistLocalDataSourceTest : TestBase() {
 
         verify(artistDao).saveArtist(radioheadDbData)
         assertTrue(result.isSuccess)
+    }
+
+    @Test
+    fun `saveFavoriteArtist propagates CancellationException instead of converting it to an error`() = runUnconfinedTest {
+        val cancellationException = CancellationException("cancelled")
+        whenever(artistDao.saveArtist(radioheadDbData)).thenAnswer { throw cancellationException }
+
+        var caught: CancellationException? = null
+        try {
+            sut.saveFavoriteArtist(radioheadEntity)
+        } catch (e: CancellationException) {
+            caught = e
+        }
+
+        assertEquals(cancellationException, caught)
     }
 
     @Test

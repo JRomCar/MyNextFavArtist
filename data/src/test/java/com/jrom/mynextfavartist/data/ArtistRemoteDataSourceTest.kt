@@ -12,6 +12,7 @@ import com.jrom.mynextfavartist.domain.dataOrNull
 import com.jrom.mynextfavartist.domain.error.DataError
 import com.jrom.mynextfavartist.domain.errorOrNull
 import com.jrom.mynextfavartist.testutils.TestBase
+import kotlinx.coroutines.CancellationException
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -51,6 +52,23 @@ class ArtistRemoteDataSourceTest : TestBase() {
 
         assertTrue(result.isSuccess)
         assertEquals(testArtistsEntityList, result.dataOrNull)
+    }
+
+    @Test
+    fun `searchArtists propagates CancellationException instead of converting it to an error`() = runUnconfinedTest {
+        whenever(musicBrainzApi.searchArtists(any(), any(), any(), any()))
+            .thenAnswer { throw CancellationException("cancelled") }
+
+        // withContext copies the exception when recovering the stack trace across the dispatch
+        // boundary, so it won't be the exact same instance - only the type/message survive.
+        var caught: CancellationException? = null
+        try {
+            sut.searchArtists("query", 30, 0)
+        } catch (e: CancellationException) {
+            caught = e
+        }
+
+        assertEquals("cancelled", caught?.message)
     }
 
     @Test

@@ -36,6 +36,15 @@ android {
     buildFeatures {
         buildConfig = true
     }
+
+    // NetworkMonitorImpl's ConnectivityManager.NetworkCallback overrides call super.onLost()/
+    // super.onCapabilitiesChanged(), which throw "Stub!" from the android.jar unit-test stub
+    // unless unstubbed methods are allowed to return a default (no-op for Unit) instead.
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+        }
+    }
 }
 
 ksp {
