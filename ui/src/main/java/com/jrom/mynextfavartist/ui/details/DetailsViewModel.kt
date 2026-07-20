@@ -28,6 +28,7 @@ class DetailsViewModel @Inject constructor(
 ) : BaseViewModel<DetailsUiState, DetailsUiEffect>(initialState) {
 
     private var favoriteStatusJob: Job? = null
+    private var releaseGroupsJob: Job? = null
 
     fun handleAction(action: DetailsUiAction) {
         when (action) {
@@ -56,7 +57,8 @@ class DetailsViewModel @Inject constructor(
 
     private fun loadReleaseGroups(artistMbid: String) {
         updateState { it.copy(releaseGroups = BaseUiState.Loading) }
-        viewModelScope.launch {
+        releaseGroupsJob?.cancel()
+        releaseGroupsJob = viewModelScope.launch {
             getArtistReleaseGroups(artistMbid).fold(
                 onSuccess = { releaseGroups ->
                     updateState { it.copy(releaseGroups = BaseUiState.Success(releaseGroups)) }

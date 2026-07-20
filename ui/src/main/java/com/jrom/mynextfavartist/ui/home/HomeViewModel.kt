@@ -10,6 +10,7 @@ import com.jrom.mynextfavartist.ui.states.BaseUiEffect
 import com.jrom.mynextfavartist.ui.states.BaseUiState
 import com.jrom.mynextfavartist.ui.states.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,6 +22,8 @@ class HomeViewModel @Inject constructor(
     // BaseUiState<List<Artist>> binding in UiStateModule without this annotation.
     initialState: @JvmSuppressWildcards BaseUiState<List<Artist>> = BaseUiState.Initial,
 ) : BaseViewModel<BaseUiState<List<Artist>>, BaseUiEffect>(initialState) {
+
+    private var loadHomeArtistsJob: Job? = null
 
     fun handleAction(action: HomeUiAction) {
         when (action) {
@@ -41,7 +44,10 @@ class HomeViewModel @Inject constructor(
         if (cachedArtists == null) {
             setState(BaseUiState.Loading)
         }
-        viewModelScope.launch {
+        // Cancel-and-relaunch so pull-to-refresh/retry never stack concurrent requests
+        // against a 1 req/sec API with last-writer-wins.
+        loadHomeArtistsJob?.cancel()
+        loadHomeArtistsJob = viewModelScope.launch {
             getHomeArtists().fold(
                 onSuccess = { setState(BaseUiState.Success(it)) },
                 onFailure = { error ->
