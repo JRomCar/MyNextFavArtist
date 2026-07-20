@@ -117,8 +117,9 @@ questions rather than assumed:
   button floating over nothing, instead of the friendly empty-state message. This bug exists
   in PlanetFinder's `FavoritesViewModel` too (it was ported faithfully at first, since
   nothing about the code looked wrong on inspection), but manual testing surfaced it, and it
-  was fixed here: an empty result now falls back to `BaseUiState.Initial`, which the existing
-  empty-state UI already handles.
+  was fixed here: an empty result now falls back to `BaseUiState.Initial` (later refined to a
+  dedicated `BaseUiState.Empty`, since `Initial` also means "not loaded yet" elsewhere), which
+  the existing empty-state UI already handles.
 
 ## Follow-up review
 

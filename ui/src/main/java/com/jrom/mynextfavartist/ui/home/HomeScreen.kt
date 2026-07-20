@@ -83,7 +83,8 @@ fun HomeContent(
                 onRetryClick = { onAction(HomeUiAction.LoadArtists) },
             )
 
-            BaseUiState.Loading, BaseUiState.Initial -> LoadingView(modifier = Modifier.fillMaxSize())
+            BaseUiState.Loading, BaseUiState.Initial, BaseUiState.Empty ->
+                LoadingView(modifier = Modifier.fillMaxSize())
         }
     }
 }

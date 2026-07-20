@@ -288,7 +288,7 @@ private fun AlbumsSection(
             }
 
             is BaseUiState.Error -> ErrorView(error = releaseGroups, onRetryClick = onRetryClick)
-            BaseUiState.Loading, BaseUiState.Initial -> LoadingView()
+            BaseUiState.Loading, BaseUiState.Initial, BaseUiState.Empty -> LoadingView()
         }
     }
 }

@@ -46,10 +46,10 @@ class FavoritesViewModel @Inject constructor(
             observeFavoriteArtists().collect { result ->
                 result.fold(
                     onSuccess = { artists ->
-                        // An empty list falls back to Initial so the empty-state content
-                        // (EmptyFavoritesContent) renders instead of a bare "Delete All
-                        // Favorites" button over nothing.
-                        setState(if (artists.isEmpty()) BaseUiState.Initial else BaseUiState.Success(artists))
+                        // An empty list is BaseUiState.Empty ("loaded, zero results"), not
+                        // Initial ("not loaded yet"), so EmptyFavoritesContent renders instead
+                        // of a bare "Delete All Favorites" button over nothing.
+                        setState(if (artists.isEmpty()) BaseUiState.Empty else BaseUiState.Success(artists))
                     },
                     onFailure = ::onDBAccessError,
                 )
@@ -61,7 +61,7 @@ class FavoritesViewModel @Inject constructor(
         setState(BaseUiState.Loading)
         viewModelScope.launch {
             removeAllFavoriteArtists().fold(
-                onSuccess = { setState(BaseUiState.Initial) },
+                onSuccess = { setState(BaseUiState.Empty) },
                 onFailure = ::onDBAccessError,
             )
         }

@@ -12,6 +12,7 @@ import com.jrom.mynextfavartist.ui.error.UiText
 sealed class BaseUiState<out T> {
     data object Initial : BaseUiState<Nothing>()
     data object Loading : BaseUiState<Nothing>()
+    data object Empty : BaseUiState<Nothing>()
     data class Error(val errorText: UiText, @DrawableRes val errorIcon: Int) : BaseUiState<Nothing>()
     data class Success<T>(val data: T) : BaseUiState<T>()
 }

@@ -50,13 +50,13 @@ class FavoritesViewModelTest : TestBase() {
     }
 
     @Test
-    fun `loadFavoriteArtists success with empty list - uiState falls back to Initial`() = runUnconfinedTest {
+    fun `loadFavoriteArtists success with empty list - uiState falls back to Empty`() = runUnconfinedTest {
         whenever(observeFavoriteArtists()).thenReturn(flowOf(Result.Success(emptyList())))
 
         sut.handleAction(FavoritesUiAction.LoadArtists)
         advanceUntilIdle()
 
-        assertEquals(BaseUiState.Initial, sut.uiState.value)
+        assertEquals(BaseUiState.Empty, sut.uiState.value)
     }
 
     @Test
@@ -73,13 +73,13 @@ class FavoritesViewModelTest : TestBase() {
     }
 
     @Test
-    fun `removeAllFavorites success - resets to Initial`() = runUnconfinedTest {
+    fun `removeAllFavorites success - resets to Empty`() = runUnconfinedTest {
         whenever(removeAllFavoriteArtists()).thenReturn(Result.Success(Unit))
 
         sut.handleAction(FavoritesUiAction.ClearAllSavedArtists)
         advanceUntilIdle()
 
-        assertEquals(BaseUiState.Initial, sut.uiState.value)
+        assertEquals(BaseUiState.Empty, sut.uiState.value)
     }
 
     @Test

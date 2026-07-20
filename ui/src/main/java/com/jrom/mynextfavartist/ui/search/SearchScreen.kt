@@ -86,7 +86,7 @@ fun SearchContent(
             })
 
             when (state) {
-                BaseUiState.Initial -> SearchPromptContent(modifier = Modifier.fillMaxSize())
+                BaseUiState.Initial, BaseUiState.Empty -> SearchPromptContent(modifier = Modifier.fillMaxSize())
                 BaseUiState.Loading -> LoadingView(modifier = Modifier.fillMaxSize())
                 is BaseUiState.Error -> ErrorView(modifier = Modifier.fillMaxSize(), error = state)
                 is BaseUiState.Success -> ArtistList(

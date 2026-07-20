@@ -91,7 +91,7 @@ fun FavoritesContent(
             )
         }
 
-        is BaseUiState.Loading -> LoadingView(modifier = modifier)
+        BaseUiState.Loading, BaseUiState.Initial -> LoadingView(modifier = modifier)
 
         is BaseUiState.Error -> ErrorView(
             modifier = modifier,
@@ -99,7 +99,7 @@ fun FavoritesContent(
             onRetryClick = { onAction(LoadArtists) }
         )
 
-        BaseUiState.Initial -> EmptyFavoritesContent(modifier = modifier)
+        BaseUiState.Empty -> EmptyFavoritesContent(modifier = modifier)
     }
 }
 
