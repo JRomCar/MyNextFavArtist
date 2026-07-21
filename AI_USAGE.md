@@ -41,8 +41,11 @@ here:
 
 - **`Outcome` → `Result`.** The plan first said to port the name verbatim. Corrected before
   implementation, following a standing preference for this reusable pattern.
-- **`BaseUiState` made generic.** The original hardcodes `Success` to a single entity list;
-  this app has two payload types, so a straight port wouldn't have compiled.
+- **`BaseUiState` made generic.** The whole `Base` states pattern (`BaseUiState`,
+  `BaseUiEffect`, `BaseViewModel`) is human-designed, ported from an earlier project of mine,
+  not an AI invention. The original hardcodes `Success` to a single entity list; this app has
+  two payload types, so a straight port wouldn't have compiled — made generic as an
+  improvement on top of the ported design.
 - **`DetailsUiState` split into three fields.** Details has two independent async concerns
   (favourite toggle, release-group fetch). Sharing one state would blank the loaded album
   list every time you tapped the heart.
@@ -62,6 +65,10 @@ here:
   `Success`, so first-time users saw a bare "Delete All" button over nothing. It was ported
   faithfully because nothing about the code looked wrong on inspection — only manual testing
   surfaced it. Empty results now use a dedicated `BaseUiState.Empty`.
+- **`backup_rules.xml` and `data_extraction_rules.xml` removed.** Both were the untouched
+  wizard-generated templates with no real `include`/`exclude` entries, and the app has no
+  local data needing custom backup handling. Removed at the user's request after a review
+  question, along with the corresponding manifest attributes.
 
 ## UI overhaul
 
