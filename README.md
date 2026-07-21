@@ -133,13 +133,23 @@ not one request per artist, which would take a dozen seconds under the rate limi
 deterministic gradient-and-initials avatar derived from the name, so the same artist always
 looks the same, and real artwork is reserved for albums where it actually exists.
 
-## Known gaps
+## Pending work
 
-Deliberately left for later:
+Known and deliberately deferred, not oversights:
 
-- **Search-result caching.** PlanetFinder caches for 3 minutes; this project doesn't yet,
-  though it would help given the rate limit.
-- **Compose UI tests**, to complement the existing ViewModel and repository unit tests.
+- **Compose UI tests.** The ViewModel, repository, and data-source layers are covered by unit
+  tests; the Compose layer isn't. Screen-level tests over `BaseUiState` (each of
+  Loading/Empty/Error/Success renders the right thing) would be the highest-value addition to
+  the suite.
+- **Search-result caching.** PlanetFinder caches results for 3 minutes; this project doesn't
+  yet, though it would matter more here given the 1 req/sec limit.
+- **The search query lives in two places** — `SavedStateHandle` in `SearchViewModel` and
+  `rememberSaveable` in `SearchView`. Both are currently load-bearing (one restores the query
+  that re-drives the search, the other the visible text) and they were verified not to
+  diverge, but the query belongs in the ViewModel with `SearchView` made stateless.
+- **`UiText.StringResource` is unstable to the Compose compiler**, because `args: List<Any>`
+  is an interface type. Harmless today under strong skipping, but an immutable list type would
+  make it stable outright.
 
 ---
 

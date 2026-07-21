@@ -12,7 +12,8 @@ requirements.
 - **Opus 4.8 as the reviewer** — a separate pass per layer (domain, data, ui), reading for
   latent bugs rather than writing features. Findings were re-verified before being trusted;
   one claimed bug (an `InterruptedException` path in `RateLimitInterceptor`) didn't hold up
-  and was discarded.
+  and was discarded. Confirmed findings that weren't fixed are listed under
+  [Pending work](README.md#pending-work).
 
 The one exception is the UI overhaul, where Opus was the builder — see below.
 
