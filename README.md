@@ -1,129 +1,146 @@
 # MyNextFavArtist
 
-A clean-architecture Android app for browsing musicians and their discographies via the
-[MusicBrainz API](https://musicbrainz.org/doc/MusicBrainz_API), built with modern Android
-best practices. This project shares its architecture with a companion project,
-[PlanetFinder](https://github.com/JRomCar/PlanetFinder) (a Star Wars planet search app), and
-was built by porting and adapting that architecture to a different API and domain.
+An Android app for browsing musicians and their discographies via the
+[MusicBrainz API](https://musicbrainz.org/doc/MusicBrainz_API).
 
-## Project Overview
+**This project exists to demonstrate clean practices in modern Android development.** It's a
+reference implementation: clean architecture across independent Gradle modules, MVI with
+unidirectional data flow, exception-free typed error handling, and a UI built entirely on
+Jetpack Compose and Material 3. The feature set is deliberately small so the structure stays
+legible — browse a curated artist list, search MusicBrainz by name, view an artist's
+discography with cover art, and save favourites.
 
-MyNextFavArtist lets users browse a curated list of well-known artists, search MusicBrainz
-for any artist by name, view an artist's discography (release groups) with album artwork
-from the Cover Art Archive, and save favorite artists for later. The app is designed to be
-scalable, maintainable, and easy to extend, following industry standards for Android
-development.
+It shares its architecture with a companion project,
+[PlanetFinder](https://github.com/JRomCar/PlanetFinder), and was built by adapting that
+architecture to a different API and domain — which is itself part of the demonstration, since
+a real API's constraints force real design differences (see
+[Working with the MusicBrainz API](#working-with-the-musicbrainz-api)).
 
-## Tech Stack
-- **Kotlin**: Primary language for all modules
-- **MVI**: Model-View-Intent — sealed `*UiAction`s dispatched through a single `handleAction()`, immutable `StateFlow<UiState>` output, one-shot side effects via `SharedFlow`
-- **Hilt**: Dependency injection
-- **Jetpack Compose**: Declarative UI framework
-- **Compose Navigation 3**: Navigation between screens
-- **Retrofit + Gson / OkHttp**: Networking (MusicBrainz), with custom interceptors for the API's User-Agent and 1 request/second rate-limit requirements
-- **Coil3**: Album cover art loading from the Cover Art Archive
-- **Room**: Local persistence of favorite artists
-- **Coroutines & StateFlow**: Asynchronous and reactive programming
-- **Typed error handling**: An exception-free `Result<D, E>` wrapper with a typed `DataError` hierarchy, mapped to UI strings/icons in the ViewModels
+## Requirements
+
+- **JDK 17+** (the toolchain targets Java 11 bytecode, but the build itself needs 17)
+- **Android SDK** with API 37 installed
+- **minSdk 29** (Android 10) — any device or emulator at or above that
+
+Gradle 9.4.1 comes via the wrapper; no local install needed.
+
+## Build and run
+
+From the project root:
+
+```bash
+./gradlew :app:assembleDebug          # build the APK
+./gradlew :app:installDebug           # build and install on a connected device/emulator
+```
+
+On Windows, use `gradlew.bat` (or `./gradlew` from Git Bash).
+
+You can also open the project in Android Studio and hit Run — no extra setup.
+
+**Verification:**
+
+```bash
+./gradlew test          # unit tests (89: 61 in :data, 26 in :ui, 1 each in :domain and :app)
+./gradlew lintDebug     # Android lint
+```
+
+### Setting a contact for release builds
+
+MusicBrainz requires a meaningful `User-Agent` with a real contact address, and blocks
+generic ones. Debug builds fall back to a placeholder so a real address is never accidentally
+committed. Release builds fail fast if you haven't set one:
+
+```bash
+./gradlew :app:assembleRelease -PmbContact=you@example.com
+```
+
+Or add `mbContact=you@example.com` to your local (git-ignored) `gradle.properties`.
+
+## The rate limit caveat
+
+**MusicBrainz allows 1 request per second.** This is the single most important thing to know
+when running the app.
+
+`RateLimitInterceptor` (`data/api/interceptor/`) enforces it at the OkHttp layer, so every
+call is throttled automatically regardless of call site. What this means in practice:
+
+- Requests **queue rather than fail** — under rapid interaction, a screen may sit on its
+  loading state for a moment while earlier calls clear.
+- If you exercise the app quickly (tapping through several artists in a row), MusicBrainz may
+  still push back and a discography can fail to load. **That's the API rate-limiting you, not
+  a bug.** Retry works.
+- Anything that would fan out into many calls is designed around this. The Home screen fetches
+  its whole curated list in a **single** request rather than one per artist — see below.
+
+Cover art comes from the separate Cover Art Archive, which has no such limit and uses its own
+plain OkHttp client.
 
 ## Architecture
 
-The app follows a clean architecture pattern, separating concerns into distinct layers:
-
-- **UI Layer** (`ui/`): Contains Composables and ViewModels following the MVI pattern, plus navigation logic. Uses `StateFlow` for state and `SharedFlow` for one-shot effects.
-- **Domain Layer** (`domain/`): Contains business logic, use cases, entities, and the `Result`/`DataError` error model. Decoupled from data and UI layers.
-- **Data Layer** (`data/`): Handles data sources, repositories, API calls (Retrofit), and persistence (Room). Implements the repository pattern and is the only layer that catches exceptions, mapping them to typed `DataError`s.
-- **Test Utilities** (`test-utils/`): Shared test utilities and mocks.
-
-## Project Structure
+Clean architecture with strict dependency direction — the domain layer knows nothing about
+the layers on either side of it:
 
 ```
-app/           # Application entry point, Hilt DI modules, MainActivity
-ui/            # UI layer: Composables, ViewModels, navigation
-domain/        # Domain layer: use cases, models, interfaces
-data/          # Data layer: repositories, API, entities
-test-utils/    # Shared test utilities
+   ui  ──────┐
+             ├──►  domain  ◄──────  data
+   app  ─────┘
 ```
+
+| Module | Responsibility |
+|---|---|
+| `app/` | Entry point, `MainActivity`, Hilt modules wiring the graph together |
+| `ui/` | Compose screens, ViewModels (MVI), navigation, theme |
+| `domain/` | Use cases, entities, repository interfaces, the `Result`/`DataError` model |
+| `data/` | Repository implementations, Retrofit API, Room persistence, interceptors |
+| `core-di/` | DI qualifiers shared across modules without dragging in Hilt itself |
+| `test-utils/` | Shared test fixtures and helpers |
+
+**MVI in the UI layer.** Each screen dispatches sealed `*UiAction`s through a single
+`handleAction()`, and renders an immutable `StateFlow<BaseUiState<T>>`. One-shot events
+(navigation, snackbars) go out as a separate `SharedFlow` of effects, so they can't be
+replayed by a configuration change. `BaseUiState<T>` is generic over its payload because this
+app loads two different lists — artists, and an artist's release groups.
+
+**Typed errors, no exceptions across boundaries.** A `Result<D, E>` wrapper carries either
+data or a `DataError`. Exceptions are caught *only* in data sources and mapped to typed
+errors there; from that point on, failure is an ordinary value that the compiler forces you
+to handle. ViewModels turn errors into UI strings and icons via `asUiText()`/`asUiIcon()`.
+
+## Tech stack
+
+- **Kotlin** 2.2.10, **AGP** 9.2.1, compileSdk 37
+- **Jetpack Compose** (BOM 2026.02.01) + **Material 3** — declarative UI, custom theme with
+  full light/dark schemes
+- **Navigation 3** — type-safe, `NavKey`-based navigation
+- **Hilt** — dependency injection
+- **Retrofit + kotlinx.serialization / OkHttp** — networking, with custom interceptors for
+  MusicBrainz's User-Agent and rate-limit requirements
+- **Room** — local persistence of favourites
+- **Coil 3** — cover art loading
+- **Coroutines & StateFlow** — async and reactive state
+- **JUnit 4 + Mockito-Kotlin + Truth** — testing
 
 ## Working with the MusicBrainz API
 
-Two things about MusicBrainz shaped several architecture decisions here:
+Two API characteristics shaped real architecture decisions here:
 
-- **No browse-all or trending endpoint.** Only free-text search (`/artist?query=...`) and
-  lookup-by-MBID exist. The Home screen shows a small curated list of well-known artists
-  (`data/repository/SeedArtists.kt`), fetched in a **single** request via a Lucene
-  `arid:(id1 OR id2 OR ...)` query against the same search endpoint used for user search —
-  not one request per artist, which would be far too slow under the rate limit below.
-- **1 request/second rate limit, and a required User-Agent.** `RateLimitInterceptor` and
-  `UserAgentInterceptor` (`data/api/interceptor/`) enforce both at the OkHttp layer, so every
-  API call goes through them automatically regardless of call site.
+**No browse-all or trending endpoint.** Only free-text search and lookup-by-MBID exist. The
+Home screen shows a curated list (`data/repository/SeedArtists.kt`) fetched in one request via
+a Lucene `arid:(id1 OR id2 OR ...)` query against the same search endpoint user search uses —
+not one request per artist, which would take a dozen seconds under the rate limit.
 
-Album artwork comes from the separate [Cover Art Archive](https://musicbrainz.org/doc/Cover_Art_Archive)
-service, which has no rate limit or User-Agent requirement of its own — cover art loading
-uses a plain OkHttp client via Coil, not the MusicBrainz-specific one.
+**No artist-photo API.** Cover Art Archive covers releases, not artists. Artist rows use a
+deterministic gradient-and-initials avatar derived from the name, so the same artist always
+looks the same, and real artwork is reserved for albums where it actually exists.
 
-MusicBrainz has no artist-photo API (Cover Art Archive only covers releases/release-groups),
-so artist rows use a deterministic initials avatar instead of a loaded image; real cover art
-is reserved for release-group (album) covers, which MusicBrainz does provide.
+## Known gaps
 
-## Dependency Injection
+Deliberately left for later:
 
-Hilt is used for dependency injection, ensuring loose coupling and easy testing. Modules are
-defined for providing dependencies across layers (`app/di/`).
+- **Search-result caching.** PlanetFinder caches for 3 minutes; this project doesn't yet,
+  though it would help given the rate limit.
+- **Compose UI tests**, to complement the existing ViewModel and repository unit tests.
 
-## UI Layer
-
-Jetpack Compose is used for building the UI in a declarative way. Navigation between screens
-is handled by Compose Navigation 3, allowing for type-safe and modular navigation.
-
-## State Management
-
-- **StateFlow**: Used in ViewModels for reactive state updates.
-- **Sealed Classes**: `BaseUiState<T>` (generic over its success payload, since this app has
-  two independently-loading lists — artists and an artist's release groups) represents
-  Loading/Success/Error/Initial for type safety and clarity.
-- **Error Handling**: Exception-free, typed error handling via a `Result<D, E>` wrapper and a
-  sealed `DataError` hierarchy. Exceptions are caught only in data sources; errors propagate
-  as values and are mapped to UI strings/icons (`asUiText()`/`asUiIcon()`) in the ViewModels.
-
-## Best Practices
-
-- **Null Safety**: Kotlin null-safe operators are used throughout.
-- **Coroutines**: Asynchronous operations are handled with coroutines for performance and thread safety.
-- **Resource Management**: Proper cleanup and lifecycle awareness in ViewModels and repositories.
-- **Code Organization**: Classes are focused, cohesive, and grouped by functionality.
-- **Consistent Formatting**: Follows Kotlin and Android style guidelines.
-
-## Before publishing
-
-MusicBrainz requires a meaningful, identifying `User-Agent` with a real contact string. This
-project defaults the contact segment to a placeholder (`contact@example.com`) via the
-`mbContact` Gradle property so a real one is never accidentally committed. Set it with:
-
-```
-./gradlew assembleDebug -PmbContact=you@example.com
-```
-
-or add `mbContact=you@example.com` to your local (git-ignored) `gradle.properties`.
-
-## Extensibility / Roadmap
-
-To add new features or modules:
-- Create new use cases in the domain layer
-- Implement repositories in the data layer
-- Add new ViewModels and Composables in the UI layer
-- Register dependencies with Hilt modules
-
-Known gaps, deliberately left for later:
-- **Search-result caching**: PlanetFinder caches search results for 3 minutes to reduce
-  redundant network calls; this project doesn't yet, though it would help further given the
-  1 req/sec ceiling.
-- **UI Testing**: Add Compose UI tests to complement the ViewModel/repository unit tests.
-
-## Summary
-
-This project serves as a reference for building scalable, maintainable Android apps using
-modern tools and patterns, and for demonstrating how to adapt a proven architecture to a new
-API with real constraints (rate limiting, no browse endpoint, a separate image service).
+---
 
 See [AI_USAGE.md](AI_USAGE.md) for how this project was built with AI assistance.
