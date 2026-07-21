@@ -7,6 +7,18 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 
+/**
+ * Common base for coroutine-heavy unit tests (ViewModels, repositories, data sources) so each
+ * test class doesn't have to redeclare the same dispatcher/executor setup.
+ *
+ * - [instantTaskExecutorRule] makes Architecture Components' background executor (used by
+ *   LiveData/Room callbacks) run synchronously instead of on a real background thread.
+ * - [mainDispatcherRule] installs [unconfinedTestDispatcher] as `Dispatchers.Main` for the
+ *   duration of each test - see [MainDispatcherRule].
+ * - [unconfinedTestDispatcher] runs coroutines eagerly (no need to manually advance a virtual
+ *   clock), which is what lets [runUnconfinedTest] assert on a StateFlow's value immediately
+ *   after triggering an action, without inserting `advanceUntilIdle()` calls everywhere.
+ */
 open class TestBase {
     @OptIn(ExperimentalCoroutinesApi::class)
     val unconfinedTestDispatcher = UnconfinedTestDispatcher()
