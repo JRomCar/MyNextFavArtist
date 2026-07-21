@@ -17,6 +17,26 @@ requirements.
 
 The one exception is the UI overhaul, where Opus was the builder — see below.
 
+## Device tooling
+
+Google's [Android CLI](https://developer.android.com/tools/agents/android-cli) is installed on
+the development machine so the agent can drive a real device rather than reason about the app
+from source alone. It wraps the SDK in commands meant for agents — start an emulator, deploy a
+build, capture the screen, dump the layout tree — and registers a skill that tells the agent
+how to use them.
+
+That is what makes the on-device work described below possible: the IPv6 routing bug, the
+empty-favourites bug, and the UI verification were all found or confirmed by running the app,
+and none of them are visible in the code.
+
+Two caveats worth stating plainly:
+
+- **It's a machine-level tool, not a project dependency.** Nothing in this repo requires it,
+  and `./gradlew` builds and tests the project without it. Cloning the repo doesn't install it.
+- **Not everything went through it.** Much of the device work used `adb` and `emulator` from
+  the SDK directly — installing builds, `input` taps and swipes, `exec-out screencap`, and
+  reading `settings` values back to check whether a UI toggle had actually registered.
+
 ## What it was used for
 
 **Research and planning.** Explored an earlier project of mine built on the same architecture
