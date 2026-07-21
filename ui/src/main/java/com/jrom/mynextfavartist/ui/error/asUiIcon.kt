@@ -4,6 +4,10 @@ import androidx.annotation.DrawableRes
 import com.jrom.mynextfavartist.domain.error.DataError
 import com.jrom.mynextfavartist.ui.R
 
+/**
+ * Same purpose as [asUiText] but for the icon shown alongside it in
+ * [com.jrom.mynextfavartist.ui.states.BaseUiState.Error].
+ */
 @DrawableRes
 fun DataError.asUiIcon(): Int {
     return when (this) {

@@ -2,6 +2,13 @@ package com.jrom.mynextfavartist.domain
 
 import com.jrom.mynextfavartist.domain.error.Error
 
+/**
+ * Success/failure as a return type instead of a thrown exception. [E] is bounded to [Error], so
+ * a failure can only ever be one of the specific cases this codebase already models (see
+ * [com.jrom.mynextfavartist.domain.error.DataError]) - never an arbitrary Throwable a caller
+ * has to guess how to handle. The helpers below (map/fold/onSuccess/onFailure) let callers
+ * chain through a Result without unwrapping it early, the same way they'd chain a Flow.
+ */
 sealed interface Result<out D, out E : Error> {
     val isSuccess: Boolean get() = this is Success<*, *>
     val isFailure: Boolean get() = this is Failure<*, *>

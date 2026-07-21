@@ -12,6 +12,14 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * MVI base: [State] is the single source of truth for what a screen renders, exposed as a
+ * StateFlow so recomposition, process death, and re-subscription after a configuration change
+ * all just re-read the latest value. [Effect] is for one-shot events (navigation, snackbars)
+ * that must fire exactly once and must never replay on a new collector - the opposite of what
+ * a screen's visible state should do. Subclasses get both channels plus [launchExclusive] for
+ * free instead of re-wiring them per screen.
+ */
 abstract class BaseViewModel<State, Effect>(initialState: State) : ViewModel() {
 
     private val _uiState = MutableStateFlow(initialState)

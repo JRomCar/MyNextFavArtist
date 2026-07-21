@@ -4,6 +4,11 @@ import com.jrom.mynextfavartist.domain.error.DataError
 import com.jrom.mynextfavartist.ui.R
 import com.jrom.mynextfavartist.ui.error.UiText.StringResource
 
+/**
+ * The one place a [DataError] becomes user-facing copy. Keeps the domain layer free of
+ * Android string resources, and keeps this mapping exhaustive and in one spot instead of
+ * every ViewModel choosing its own wording for the same error.
+ */
 fun DataError.asUiText(): UiText {
     return when (this) {
         DataError.Network.BAD_REQUEST -> StringResource(R.string.bad_request)
