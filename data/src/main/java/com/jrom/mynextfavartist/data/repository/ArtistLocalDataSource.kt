@@ -75,7 +75,7 @@ class ArtistLocalDataSource(
             .retryWhen { cause, _ ->
                 if (cause is CancellationException) throw cause
                 emit(Result.Failure(DataError.Local.DB_READ_ERROR))
-                delay(OBSERVE_RETRY_DELAY_MILLIS)
+                delay(OBSERVE_RETRY_DELAY_MILLIS.milliseconds)
                 true
             }
 }
