@@ -39,8 +39,11 @@ ViewModels and navigation, plus ViewModel, repository, and data-source tests.
 Porting an existing architecture meant deciding, repeatedly, whether the original made sense
 here:
 
-- **`Outcome` → `Result`.** The plan first said to port the name verbatim. Corrected before
-  implementation, following a standing preference for this reusable pattern.
+- **`Outcome` → `Result`.** The whole typed error-handling pattern (`Result`, `DataError`, and
+  the `map`/`onSuccess`/`onFailure` helpers around them) is human-designed, ported from an
+  earlier project of mine, not an AI invention. The plan first said to port the name `Outcome`
+  verbatim; corrected before implementation to `Result`, the name already used for this
+  reusable pattern.
 - **`BaseUiState` made generic.** The whole `Base` states pattern (`BaseUiState`,
   `BaseUiEffect`, `BaseViewModel`) is human-designed, ported from an earlier project of mine,
   not an AI invention. The original hardcodes `Success` to a single entity list; this app has
