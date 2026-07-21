@@ -60,19 +60,30 @@ Or add `mbContact=you@example.com` to your local (git-ignored) `gradle.propertie
 **MusicBrainz allows 1 request per second.** This is the single most important thing to know
 when running the app.
 
-`RateLimitInterceptor` (`data/api/interceptor/`) enforces it at the OkHttp layer, so every
-call is throttled automatically regardless of call site. What this means in practice:
+Several design decisions exist to work around it:
 
-- Requests **queue rather than fail** — under rapid interaction, a screen may sit on its
-  loading state for a moment while earlier calls clear.
-- If you exercise the app quickly (tapping through several artists in a row), MusicBrainz may
-  still push back and a discography can fail to load. **That's the API rate-limiting you, not
-  a bug.** Retry works.
-- Anything that would fan out into many calls is designed around this. The Home screen fetches
-  its whole curated list in a **single** request rather than one per artist — see below.
+- **`RateLimitInterceptor`** (`data/api/interceptor/`) spaces requests at least a second apart
+  at the OkHttp layer, so every call is throttled automatically regardless of call site.
+  Requests **queue rather than fail** — under rapid interaction a screen may sit on its loading
+  state briefly while earlier calls clear.
+- **Fan-out is designed away.** The Home screen fetches its entire curated list in a *single*
+  request via a Lucene `arid:(id1 OR id2 OR ...)` query, rather than one lookup per artist,
+  which would take a dozen seconds under this ceiling.
+- **Cover art never spends the budget.** It comes from the separate Cover Art Archive, which
+  has no such limit, over its own plain OkHttp client.
+- **Every failure is recoverable.** Errors arrive as typed `DataError`s rather than exceptions,
+  and each screen renders them with a working retry rather than a dead end.
 
-Cover art comes from the separate Cover Art Archive, which has no such limit and uses its own
-plain OkHttp client.
+**Even with all of this, the API still returns errors.** The 1 req/sec figure is the
+documented ceiling, not a guarantee — MusicBrainz also throttles by shared IP and by
+server-side load, so a well-behaved client can still be turned away. In practice this shows
+up as a discography that occasionally fails to load, most often when you tap through several
+artists in quick succession.
+
+**That's the service pushing back, not a bug in the app.** Retry works. Short of caching
+aggressively (see [Pending work](#pending-work)), there's no client-side fix that removes it
+entirely — so the app is built to fail gracefully and recover rather than to pretend it can't
+happen.
 
 ## Architecture
 
@@ -121,12 +132,11 @@ to handle. ViewModels turn errors into UI strings and icons via `asUiText()`/`as
 
 ## Working with the MusicBrainz API
 
-Two API characteristics shaped real architecture decisions here:
+Beyond the rate limit above, two more API characteristics shaped real decisions here:
 
-**No browse-all or trending endpoint.** Only free-text search and lookup-by-MBID exist. The
-Home screen shows a curated list (`data/repository/SeedArtists.kt`) fetched in one request via
-a Lucene `arid:(id1 OR id2 OR ...)` query against the same search endpoint user search uses —
-not one request per artist, which would take a dozen seconds under the rate limit.
+**No browse-all or trending endpoint.** Only free-text search and lookup-by-MBID exist, which
+is why the Home screen shows a curated list (`data/repository/SeedArtists.kt`) rather than
+anything dynamic — there is no "popular artists" to ask for.
 
 **No artist-photo API.** Cover Art Archive covers releases, not artists. Artist rows use a
 deterministic gradient-and-initials avatar derived from the name, so the same artist always

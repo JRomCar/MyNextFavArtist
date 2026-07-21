@@ -19,14 +19,14 @@ The one exception is the UI overhaul, where Opus was the builder — see below.
 
 ## What it was used for
 
-**Research and planning.** Explored [PlanetFinder](https://github.com/JRomCar/PlanetFinder)
-(a companion app with the same architecture) for its module layout, MVI pattern, and testing
-conventions. Checked the MusicBrainz API and Cover Art Archive directly rather than assuming
-their behaviour, and verified the curated seed-artist MBIDs against the live search API
-instead of recalling them. The resulting plan was reviewed and approved before any code.
+**Research and planning.** Explored an earlier project of mine built on the same architecture
+for its module layout, MVI pattern, and testing conventions. Checked the MusicBrainz API and
+Cover Art Archive directly rather than assuming their behaviour, and verified the curated
+seed-artist MBIDs against the live search API instead of recalling them. The resulting plan
+was reviewed and approved before any code.
 
 **Scaffolding.** Multi-module Gradle setup, Hilt modules, Room database/DAO, Retrofit
-interface and DTOs — ported from PlanetFinder and adapted to MusicBrainz.
+interface and DTOs — ported from that project and adapted to MusicBrainz.
 
 **Features and tests.** All four screens (Home, Search, Favorites, Details) with their
 ViewModels and navigation, plus ViewModel, repository, and data-source tests.
@@ -36,28 +36,29 @@ ViewModels and navigation, plus ViewModel, repository, and data-source tests.
 
 ## What was rewritten or rejected, and why
 
-Porting from PlanetFinder meant deciding, repeatedly, whether the original made sense here:
+Porting an existing architecture meant deciding, repeatedly, whether the original made sense
+here:
 
 - **`Outcome` → `Result`.** The plan first said to port the name verbatim. Corrected before
   implementation, following a standing preference for this reusable pattern.
-- **`BaseUiState` made generic.** PlanetFinder hardcodes `Success` to `List<Planet>`; this
-  app has two payload types, so a straight port wouldn't have compiled.
+- **`BaseUiState` made generic.** The original hardcodes `Success` to a single entity list;
+  this app has two payload types, so a straight port wouldn't have compiled.
 - **`DetailsUiState` split into three fields.** Details has two independent async concerns
   (favourite toggle, release-group fetch). Sharing one state would blank the loaded album
   list every time you tapped the heart.
-- **`PullToRefresh` rebuilt on Material3.** PlanetFinder uses the experimental Material2 API;
+- **`PullToRefresh` rebuilt on Material3.** The original uses the experimental Material2 API;
   matching it would have meant adding a dependency this project doesn't need.
-- **PlanetFinder's global `lateinit var colorScheme` dropped.** A top-level mutable set as a
-  composition side effect, read from several components. Every port that used it now reads
-  `MaterialTheme.colorScheme` directly.
+- **A global `lateinit var colorScheme` dropped.** The original sets a top-level mutable as a
+  composition side effect and reads it from several components. Every port that used it now
+  reads `MaterialTheme.colorScheme` directly.
 - **An IPv6-routing bug, found only by running the app.** The emulator resolved an IPv6
   address for `musicbrainz.org` it couldn't route to. Fixed with an IPv4-preferring `Dns`,
   then removed once the same failures reproduced on a real device with the filter off —
   confirming it was never the cause.
 - **An empty-state bug in `FavoritesViewModel`.** An empty favourites list was reported as
-  `Success`, so first-time users saw a bare "Delete All" button over nothing. The same bug
-  exists in PlanetFinder; only manual testing surfaced it. Empty results now use a dedicated
-  `BaseUiState.Empty`.
+  `Success`, so first-time users saw a bare "Delete All" button over nothing. It was ported
+  faithfully because nothing about the code looked wrong on inspection — only manual testing
+  surfaced it. Empty results now use a dedicated `BaseUiState.Empty`.
 
 ## UI overhaul
 
