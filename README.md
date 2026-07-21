@@ -10,11 +10,10 @@ Jetpack Compose and Material 3. The feature set is deliberately small so the str
 legible — browse a curated artist list, search MusicBrainz by name, view an artist's
 discography with cover art, and save favourites.
 
-It shares its architecture with a companion project,
-[PlanetFinder](https://github.com/JRomCar/PlanetFinder), and was built by adapting that
-architecture to a different API and domain — which is itself part of the demonstration, since
-a real API's constraints force real design differences (see
-[Working with the MusicBrainz API](#working-with-the-musicbrainz-api)).
+The architecture isn't applied in a vacuum: MusicBrainz's real constraints — a hard rate
+limit, no browse-all endpoint, no artist images — force real design decisions, which is
+part of what makes it worth reading. See
+[Working with the MusicBrainz API](#working-with-the-musicbrainz-api).
 
 ## Requirements
 
@@ -141,8 +140,8 @@ Known and deliberately deferred, not oversights:
   tests; the Compose layer isn't. Screen-level tests over `BaseUiState` (each of
   Loading/Empty/Error/Success renders the right thing) would be the highest-value addition to
   the suite.
-- **Search-result caching.** PlanetFinder caches results for 3 minutes; this project doesn't
-  yet, though it would matter more here given the 1 req/sec limit.
+- **Search-result caching.** Repeating a search re-hits the network every time. A short-lived
+  cache would matter more here than in most apps, given the 1 req/sec limit.
 - **The search query lives in two places** — `SavedStateHandle` in `SearchViewModel` and
   `rememberSaveable` in `SearchView`. Both are currently load-bearing (one restores the query
   that re-drives the search, the other the visible text) and they were verified not to
