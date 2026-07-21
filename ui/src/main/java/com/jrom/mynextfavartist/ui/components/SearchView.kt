@@ -1,11 +1,12 @@
 package com.jrom.mynextfavartist.ui.components
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,62 +30,78 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import com.jrom.mynextfavartist.ui.R
+import com.jrom.mynextfavartist.ui.utils.Dimensions
 import com.jrom.mynextfavartist.ui.utils.PreviewWrapper
 
 @Composable
 fun SearchView(
+    modifier: Modifier = Modifier,
     onQueryChange: (query: String) -> Unit,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
+    val clearDescription = stringResource(R.string.clear_search_description)
 
     LaunchedEffect(focusRequester) {
         focusRequester.requestFocus()
     }
 
-    Column {
-        TextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester),
-            placeholder = {
-                Text(text = stringResource(R.string.search_placeholder))
-            },
-            value = query,
-            onValueChange = {
-                query = it
-                onQueryChange(it)
-            },
-            trailingIcon = {
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = {
-                        query = ""
-                        onQueryChange("")
-                    }) {
-                        Icon(painter = painterResource(R.drawable.ic_close), contentDescription = null)
-                    }
-                }
-            },
-            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
-            singleLine = true,
-            maxLines = 1,
-            colors = TextFieldDefaults.colors(
-                cursorColor = MaterialTheme.colorScheme.onPrimary,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                selectionColors = TextSelectionColors(
-                    MaterialTheme.colorScheme.onPrimary,
-                    MaterialTheme.colorScheme.primaryContainer
-                ),
+    TextField(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = Dimensions.paddingLarge, vertical = Dimensions.paddingMedium)
+            .focusRequester(focusRequester),
+        placeholder = {
+            Text(
+                text = stringResource(R.string.search_placeholder),
+                style = MaterialTheme.typography.bodyLarge,
             )
+        },
+        value = query,
+        onValueChange = {
+            query = it
+            onQueryChange(it)
+        },
+        leadingIcon = {
+            Icon(
+                painter = painterResource(R.drawable.ic_search),
+                contentDescription = null,
+                modifier = Modifier.size(Dimensions.iconSizeMedium),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = {
+                    query = ""
+                    onQueryChange("")
+                }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_close),
+                        contentDescription = clearDescription,
+                    )
+                }
+            }
+        },
+        shape = RoundedCornerShape(Dimensions.buttonCornerRadius),
+        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
+        singleLine = true,
+        maxLines = 1,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            cursorColor = MaterialTheme.colorScheme.primary,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
         )
-    }
+    )
 }
 
-@Preview(showSystemUi = true, name = "Light")
-@Preview(showSystemUi = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = true, name = "Light")
+@Preview(showBackground = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun SearchViewPreview() = PreviewWrapper {
     SearchView(

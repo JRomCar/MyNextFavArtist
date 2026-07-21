@@ -1,25 +1,19 @@
 package com.jrom.mynextfavartist.ui.search
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -28,14 +22,15 @@ import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.error.DataError
 import com.jrom.mynextfavartist.ui.R
 import com.jrom.mynextfavartist.ui.components.ArtistList
+import com.jrom.mynextfavartist.ui.components.ArtistListSkeleton
+import com.jrom.mynextfavartist.ui.components.EmptyStateView
 import com.jrom.mynextfavartist.ui.components.ErrorView
-import com.jrom.mynextfavartist.ui.components.LoadingView
 import com.jrom.mynextfavartist.ui.components.SearchView
+import com.jrom.mynextfavartist.ui.components.SectionHeader
 import com.jrom.mynextfavartist.ui.error.asUiIcon
 import com.jrom.mynextfavartist.ui.error.asUiText
 import com.jrom.mynextfavartist.ui.states.BaseUiEffect
 import com.jrom.mynextfavartist.ui.states.BaseUiState
-import com.jrom.mynextfavartist.ui.utils.Dimensions
 import com.jrom.mynextfavartist.ui.utils.PreviewWrapper
 import com.jrom.mynextfavartist.ui.utils.collectWithEffect
 import com.jrom.mynextfavartist.ui.utils.previewArtists
@@ -71,6 +66,7 @@ fun SearchContent(
     onAction: (SearchUiAction) -> Unit,
 ) {
     val screenDescription = stringResource(R.string.search_screen_description)
+    val bottomPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding())
 
     Box(
         modifier = modifier.semantics { contentDescription = screenDescription }
@@ -78,6 +74,9 @@ fun SearchContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                // Only the top inset is consumed here; the bottom one is handed to whichever
+                // list or empty state is showing so it can scroll under the navigation bar.
+                .padding(top = contentPadding.calculateTopPadding())
                 .imePadding()
         ) {
             SearchView(onQueryChange = { query ->
@@ -85,41 +84,48 @@ fun SearchContent(
             })
 
             when (state) {
-                BaseUiState.Initial, BaseUiState.Empty -> SearchPromptContent(modifier = Modifier.fillMaxSize())
-                BaseUiState.Loading -> LoadingView(modifier = Modifier.fillMaxSize())
-                is BaseUiState.Error -> ErrorView(modifier = Modifier.fillMaxSize(), error = state)
-                is BaseUiState.Success -> ArtistList(
+                BaseUiState.Initial, BaseUiState.Empty -> EmptyStateView(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
-                    artists = state.data,
-                    onArtistClick = { artist -> onAction(SearchUiAction.ArtistClicked(artist)) }
+                    icon = R.drawable.ic_search,
+                    title = stringResource(R.string.search_prompt_title),
+                    description = stringResource(R.string.search_prompt_description),
                 )
-            }
-        }
-    }
-}
 
-@Composable
-private fun SearchPromptContent(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.padding(Dimensions.paddingXL),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_search),
-                contentDescription = null,
-                modifier = Modifier.padding(bottom = Dimensions.paddingLarge),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = stringResource(R.string.search_prompt_title),
-                style = MaterialTheme.typography.headlineSmall,
-                textAlign = TextAlign.Center,
-            )
+                BaseUiState.Loading -> ArtistListSkeleton(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = bottomPadding,
+                )
+
+                is BaseUiState.Error -> ErrorView(modifier = Modifier.fillMaxSize(), error = state)
+
+                // A query that matched nothing still arrives as Success, so the "no results"
+                // message lives here rather than in a dedicated state.
+                is BaseUiState.Success -> if (state.data.isEmpty()) {
+                    EmptyStateView(
+                        modifier = Modifier.fillMaxSize(),
+                        icon = R.drawable.ic_search,
+                        title = stringResource(R.string.search_no_results_title),
+                        description = stringResource(R.string.search_no_results_description),
+                    )
+                } else {
+                    ArtistList(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = bottomPadding,
+                        artists = state.data,
+                        header = {
+                            SectionHeader(
+                                title = stringResource(R.string.search_results_title),
+                                subtitle = pluralStringResource(
+                                    R.plurals.search_results_count,
+                                    state.data.size,
+                                    state.data.size,
+                                ),
+                            )
+                        },
+                        onArtistClick = { artist -> onAction(SearchUiAction.ArtistClicked(artist)) }
+                    )
+                }
+            }
         }
     }
 }
@@ -127,7 +133,7 @@ private fun SearchPromptContent(modifier: Modifier = Modifier) {
 @Preview(showSystemUi = true, name = "Light")
 @Preview(showSystemUi = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun SearchContentPreview() {
+private fun SearchContentPreview() {
     PreviewWrapper {
         SearchContent(
             state = BaseUiState.Success(previewArtists),
@@ -138,7 +144,7 @@ fun SearchContentPreview() {
 @Preview(showSystemUi = true, name = "Light")
 @Preview(showSystemUi = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun ErrorSearchContentPreview() {
+private fun ErrorSearchContentPreview() {
     PreviewWrapper {
         val error = DataError.Network.UNKNOWN
         SearchContent(
@@ -150,7 +156,7 @@ fun ErrorSearchContentPreview() {
 @Preview(showSystemUi = true, name = "Light")
 @Preview(showSystemUi = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun EmptySearchContentPreview() {
+private fun EmptySearchContentPreview() {
     PreviewWrapper {
         SearchContent(
             state = BaseUiState.Initial,
@@ -161,7 +167,7 @@ fun EmptySearchContentPreview() {
 @Preview(showSystemUi = true, name = "Light")
 @Preview(showSystemUi = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun LoadingSearchContentPreview() {
+private fun LoadingSearchContentPreview() {
     PreviewWrapper {
         SearchContent(
             state = BaseUiState.Loading,

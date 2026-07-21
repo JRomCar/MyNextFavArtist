@@ -4,16 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jrom.mynextfavartist.domain.network.NetworkMonitor
 import com.jrom.mynextfavartist.ui.MyNextFavArtistApp
-import com.jrom.mynextfavartist.ui.components.NoConnectionBanner
 import com.jrom.mynextfavartist.ui.theme.MyNextFavArtistTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -32,14 +26,7 @@ class MainActivity : ComponentActivity() {
             MyNextFavArtistTheme {
                 val isOnline by networkMonitor.networkState.collectAsStateWithLifecycle(null)
 
-                Column(modifier = Modifier.fillMaxSize()) {
-                    AnimatedVisibility(visible = isOnline == false) {
-                        NoConnectionBanner()
-                    }
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        MyNextFavArtistApp()
-                    }
-                }
+                MyNextFavArtistApp(isOffline = isOnline == false)
             }
         }
     }

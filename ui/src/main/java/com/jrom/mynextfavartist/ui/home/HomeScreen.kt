@@ -18,9 +18,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.ui.R
 import com.jrom.mynextfavartist.ui.components.ArtistList
+import com.jrom.mynextfavartist.ui.components.ArtistListSkeleton
 import com.jrom.mynextfavartist.ui.components.ErrorView
-import com.jrom.mynextfavartist.ui.components.LoadingView
 import com.jrom.mynextfavartist.ui.components.PullToRefresh
+import com.jrom.mynextfavartist.ui.components.SectionHeader
 import com.jrom.mynextfavartist.ui.states.BaseUiEffect
 import com.jrom.mynextfavartist.ui.states.BaseUiState
 import com.jrom.mynextfavartist.ui.states.HomeUiState
@@ -75,6 +76,7 @@ fun HomeContent(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = contentPadding,
                 artists = artists.data,
+                header = { HomeHeader() },
                 onArtistClick = { artist -> onAction(HomeUiAction.ArtistClicked(artist)) },
             )
 
@@ -85,9 +87,21 @@ fun HomeContent(
             )
 
             BaseUiState.Loading, BaseUiState.Initial, BaseUiState.Empty ->
-                LoadingView(modifier = Modifier.fillMaxSize())
+                ArtistListSkeleton(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = contentPadding,
+                )
         }
     }
+}
+
+@Composable
+private fun HomeHeader(modifier: Modifier = Modifier) {
+    SectionHeader(
+        modifier = modifier,
+        title = stringResource(R.string.home_header_title),
+        subtitle = stringResource(R.string.home_header_subtitle),
+    )
 }
 
 @Preview(showSystemUi = true, name = "Light")

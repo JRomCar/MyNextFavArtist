@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.MyNextFavArtist" parent="android:Theme.Material.Light.NoActionBar" />
+    <!--
+      Only the window background matters here - every pixel after the first frame is drawn by
+      Compose. It is pinned to the Compose theme's own background so the launch window doesn't
+      flash a different colour before MyNextFavArtistTheme takes over; values-night carries the
+      dark counterpart, which the previous hardcoded Light theme had no way to express.
+    -->
+    <style name="Theme.MyNextFavArtist" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
 </resources>
