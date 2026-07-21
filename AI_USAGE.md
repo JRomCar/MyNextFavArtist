@@ -46,8 +46,11 @@ here:
 - **`DetailsUiState` split into three fields.** Details has two independent async concerns
   (favourite toggle, release-group fetch). Sharing one state would blank the loaded album
   list every time you tapped the heart.
-- **`PullToRefresh` rebuilt on Material3.** The original uses the experimental Material2 API;
-  matching it would have meant adding a dependency this project doesn't need.
+- **Material3 `PullToRefreshBox` used directly.** The original uses the experimental Material2
+  API and wraps it in a custom `PullToRefresh` composable; matching the Material2 dependency
+  wasn't worth it, so the port moved straight to Material3. The wrapper itself stuck around as
+  a single-use pass-through until a later user review flagged it as unnecessary indirection;
+  removed at the user's request and inlined into `HomeScreen`.
 - **A global `lateinit var colorScheme` dropped.** The original sets a top-level mutable as a
   composition side effect and reads it from several components. Every port that used it now
   reads `MaterialTheme.colorScheme` directly.

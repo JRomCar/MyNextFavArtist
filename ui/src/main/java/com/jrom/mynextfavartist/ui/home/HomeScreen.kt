@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,7 +21,6 @@ import com.jrom.mynextfavartist.ui.R
 import com.jrom.mynextfavartist.ui.components.ArtistList
 import com.jrom.mynextfavartist.ui.components.ArtistListSkeleton
 import com.jrom.mynextfavartist.ui.components.ErrorView
-import com.jrom.mynextfavartist.ui.components.PullToRefresh
 import com.jrom.mynextfavartist.ui.components.SectionHeader
 import com.jrom.mynextfavartist.ui.states.BaseUiEffect
 import com.jrom.mynextfavartist.ui.states.BaseUiState
@@ -66,7 +66,7 @@ fun HomeContent(
     state: HomeUiState,
     onAction: (HomeUiAction) -> Unit,
 ) {
-    PullToRefresh(
+    PullToRefreshBox(
         modifier = modifier,
         isRefreshing = state.isRefreshing,
         onRefresh = { onAction(HomeUiAction.LoadArtists) },
