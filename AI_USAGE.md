@@ -117,6 +117,12 @@ post-trim length again, and will need the same treatment.
 
 ## What the AI produced that was rewritten or rejected
 
+This happened considerably more often than the list below suggests. Rejections that were
+resolved in conversation — a suggestion turned down before it was written, a generated approach
+replaced during a back-and-forth — mostly went unrecorded at the time, and reconstructing them
+after the fact would mean guessing at details this document has no business guessing at. What
+follows is what could be attributed accurately, not a complete tally.
+
 - **`Outcome` → `Result`** — *caught by the developer, before implementation.* The typed
   error-handling pattern itself is human-designed, ported from the developer's earlier project,
   not an AI invention. The generated plan proposed keeping the original name `Outcome` for
