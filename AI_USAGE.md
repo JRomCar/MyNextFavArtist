@@ -3,6 +3,17 @@
 How AI assistance was used to build MyNextFavArtist, per the project's transparency
 requirements.
 
+## Tools used
+
+- **[Claude Code](https://claude.com/claude-code)** (Anthropic's agentic CLI) — the whole
+  build, in two roles described below. Two models: **Claude Sonnet 5** and **Claude Opus 4.8**.
+- **[Android CLI](https://developer.android.com/tools/agents/android-cli)** (Google) — the
+  agent's route to a real device. Installed on the development machine, not a project
+  dependency; see [Device tooling](#device-tooling).
+- **`adb` and `emulator`** from the Android SDK, used directly for most device work.
+- **Compose compiler reports** (`reportsDestination`), enabled temporarily to settle questions
+  about recomposition with evidence instead of argument, then switched back off.
+
 ## How the work was split
 
 **Claude Code** (Anthropic's agentic CLI) did essentially the whole build, in two roles:
@@ -59,52 +70,80 @@ The resulting plan was reviewed and approved by the developer before any code.
 **Scaffolding.** Multi-module Gradle setup, Hilt modules, Room database/DAO, Retrofit
 interface and DTOs — ported from that project and adapted to MusicBrainz.
 
-**Features and tests.** All four screens (Home, Search, Favorites, Details) with their
-ViewModels and navigation, plus ViewModel, repository, and data-source tests.
+**Features.** All four screens (Home, Search, Favorites, Details) with their ViewModels,
+actions/effects, and navigation wiring.
+
+**Tests.** ViewModel tests for all four screens, repository and data-source tests, and two
+with no equivalent in the earlier project — `RateLimitInterceptorTest`, and `GetHomeArtistsTest`
+for the seed-query construction. Written to match the existing structure and stack (JUnit4 +
+Mockito-Kotlin + Truth), currently 89 tests.
 
 **Debugging.** Built and ran the app on an emulator, drove it through the real UI, and read
 `adb logcat` to find bugs that code review wouldn't have caught.
 
-## What was rewritten or rejected, and why
+**Architectural discussion.** Several decisions were reached by asking rather than assuming:
 
-Porting an existing architecture meant deciding, repeatedly, whether the original made sense
-here:
+- *What the Home screen should show*, given MusicBrainz has no trending or browse-all
+  endpoint. A curated seed list was chosen over a favourites-first landing screen or folding
+  Home into Search.
+- *What to name the `Result<D, E>` wrapper* — see the rejections below.
+- *Whether to invent a component* to fill the empty space in a hero with no artist image. The
+  developer decided against it: better to let the title carry the space than to manufacture
+  content for it.
 
-- **`Outcome` → `Result`.** The whole typed error-handling pattern (`Result`, `DataError`, and
+**Documentation.** The README and this file were both drafted by Claude Code, then revised on
+the developer's instructions — including a pass that cut this document by a third when it had
+grown to explaining single decisions at paragraph length.
+
+## What the AI produced that was rewritten or rejected
+
+- **`Outcome` → `Result`.** The typed error-handling pattern itself (`Result`, `DataError`, and
   the `map`/`onSuccess`/`onFailure` helpers around them) is human-designed, ported from the
-  developer's earlier project, not an AI invention. The plan first said to port the name
-  `Outcome` verbatim; corrected before implementation to `Result`, the name already used for
-  this reusable pattern.
-- **`BaseUiState` made generic.** The whole `Base` states pattern (`BaseUiState`,
-  `BaseUiEffect`, `BaseViewModel`) is human-designed, ported from the developer's earlier
-  project, not an AI invention. The original hardcodes `Success` to a single entity list; this
-  app has two payload types, so a straight port wouldn't have compiled — made generic as an
-  improvement on top of the ported design.
-- **`DetailsUiState` split into three fields.** Details has two independent async concerns
-  (favourite toggle, release-group fetch). Sharing one state would blank the loaded album
-  list every time you tapped the heart.
-- **Material3 `PullToRefreshBox` used directly.** The original uses the experimental Material2
-  API and wraps it in a custom `PullToRefresh` composable; matching the Material2 dependency
-  wasn't worth it, so the port moved straight to Material3. The wrapper itself stuck around as
-  a single-use pass-through until a later review by the developer flagged it as unnecessary
-  indirection; removed at their request and inlined into `HomeScreen`.
-- **A global `lateinit var colorScheme` dropped.** The original sets a top-level mutable as a
-  composition side effect and reads it from several components. Every port that used it now
-  reads `MaterialTheme.colorScheme` directly.
+  developer's earlier project, not an AI invention. The generated plan proposed keeping the
+  original name `Outcome` for fidelity; corrected before any code was written to `Result`, the
+  name already established for this reusable pattern.
+- **A broken first draft of `AlbumArtCard`'s fallback.** An early version tried to build the
+  "no cover art" placeholder from `rememberAsyncImagePainter(model = null)`, which doesn't
+  produce a meaningful image at all. Caught and rewritten before it was ever built, in favour
+  of a local vector drawable.
+- **A single-use `PullToRefresh` wrapper.** Written as a pass-through around Material3's
+  `PullToRefreshBox` with nothing added. A later review by the developer flagged it as
+  indirection for its own sake; removed and inlined into `HomeScreen`.
 - **A misdiagnosed IPv6-routing bug.** The emulator resolved an IPv6 address for
   `musicbrainz.org` it appeared unable to route to, so an IPv4-preferring `Dns` was added.
   The developer then tested it on the emulator directly, found the same failures happening
   with the filter disabled — and reproducing in the device browser, outside the app entirely —
   and made the call to remove it. The diagnosis was wrong; the fix was treating a symptom that
   had another cause.
+- **Assorted UI-overhaul output**, listed under [UI overhaul](#ui-overhaul) below, plus the
+  review findings that didn't survive verification, listed at the top.
+
+## What was not ported faithfully, and why
+
+Separately from the above: porting an existing architecture meant deciding, repeatedly,
+whether the original made sense in this app. These reject inherited code — the earlier
+project's, or the Studio wizard's — rather than anything the AI invented.
+
+- **`BaseUiState` made generic.** The `Base` states pattern (`BaseUiState`, `BaseUiEffect`,
+  `BaseViewModel`) is human-designed and was ported wholesale. But the original hardcodes
+  `Success` to a single entity list, and this app has two payload types, so a straight port
+  wouldn't have compiled — made generic as an improvement on top of the ported design.
+- **`DetailsUiState` split into three fields.** Details has two independent async concerns
+  (favourite toggle, release-group fetch). Sharing one state would blank the loaded album
+  list every time you tapped the heart.
+- **Material3 `PullToRefreshBox` used directly.** The original uses the experimental Material2
+  API, which would have meant adding a dependency this project doesn't otherwise need.
+- **A global `lateinit var colorScheme` dropped.** The original sets a top-level mutable as a
+  composition side effect and reads it from several components. Every port that used it now
+  reads `MaterialTheme.colorScheme` directly.
 - **An empty-state bug in `FavoritesViewModel`.** An empty favourites list was reported as
   `Success`, so first-time users saw a bare "Delete All" button over nothing. It was ported
   faithfully because nothing about the code looked wrong on inspection — only manual testing
   surfaced it. Empty results now use a dedicated `BaseUiState.Empty`.
-- **`backup_rules.xml` and `data_extraction_rules.xml` removed.** Both were the untouched
-  wizard-generated templates with no real `include`/`exclude` entries, and the app has no
-  local data needing custom backup handling. Removed at the developer's request after a review
-  question, along with the corresponding manifest attributes.
+- **`backup_rules.xml` and `data_extraction_rules.xml` removed.** Wizard-generated templates,
+  carried into the project unexamined and never given real `include`/`exclude` entries; the app
+  has no local data needing custom backup handling. Removed at the developer's request after a
+  review question, along with the corresponding manifest attributes.
 
 ## UI overhaul
 
