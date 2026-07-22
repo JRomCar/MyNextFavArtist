@@ -59,7 +59,6 @@ run {
 dependencies {
     implementation(project(":data"))
     implementation(project(":ui"))
-    implementation(project(":core-di"))
     testImplementation(project(":test-utils"))
 
     implementation(platform(libs.androidx.compose.bom))

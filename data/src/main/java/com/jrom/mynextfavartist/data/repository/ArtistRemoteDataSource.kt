@@ -5,7 +5,6 @@ import com.jrom.mynextfavartist.data.entities.ReleaseGroupData
 import com.jrom.mynextfavartist.data.util.mapThrowableToNetworkError
 import com.jrom.mynextfavartist.data.util.toDomain
 import com.jrom.mynextfavartist.domain.Result
-import com.jrom.mynextfavartist.coredi.IoDispatcher
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.entities.ReleaseGroup
 import com.jrom.mynextfavartist.domain.error.DataError
@@ -18,7 +17,7 @@ import kotlinx.coroutines.withContext
 private const val MAX_RELEASE_GROUP_PAGES = 20
 
 class ArtistRemoteDataSource(
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val ioDispatcher: CoroutineDispatcher,
     private val musicBrainzApi: MusicBrainzApi,
 ) : ArtistDataSource.Remote {
 

@@ -132,6 +132,16 @@ follows is what could be attributed accurately, not a complete tally.
   pass-through around Material3's `PullToRefreshBox` that added nothing. It compiled, it worked,
   and it would have survived indefinitely; the developer read it, called it indirection for its
   own sake, and had it inlined into `HomeScreen`.
+- **A `:core-di` module built on a premise nobody checked** — *caught by the developer, in
+  review.* An earlier commit correctly removed Hilt and KSP from `:domain`, which had been
+  pulling the whole annotation processor in to host one 7-line qualifier. But it moved that
+  qualifier into a brand-new Gradle module, reasoning that `:data` also consumed `@IoDispatcher`
+  and couldn't depend on `:app` without inverting the graph. The developer asked why a module
+  existed for seven lines. It turned out `:data` has no Hilt, no Dagger processor, and no
+  `@Inject` anywhere: `ArtistRemoteDataSource` is hand-constructed in `:app`'s `DataModule` with
+  positional arguments, so the annotation on its constructor was decorative — retained at
+  runtime, read by nothing. `:app` was the only real consumer all along. The module is gone and
+  the qualifier now sits beside the module that provides the binding.
 - **A misdiagnosed IPv6-routing bug** — *caught by the developer, on the emulator.* The
   emulator resolved an IPv6 address for `musicbrainz.org` it appeared unable to route to, so an
   IPv4-preferring `Dns` was added. The developer tested that theory directly: disabled the
@@ -224,9 +234,16 @@ room for the answer to be "it is necessary, and here's why". Several times it wa
 
 **Claims were made to produce evidence.** "It doesn't recompose" was not accepted as an answer;
 the compiler reports were turned on to check. "The IPv6 filter fixed it" was not accepted
-either — the developer disabled it and reproduced the failure without it. The rate limit,
-the skipping behaviour, and the icon's safe-zone geometry were all confirmed by running
+either — the developer disabled it and reproduced the failure without it. "`:data` needs this
+module" was settled by deleting the dependency and running the build, which passed. The rate
+limit, the skipping behaviour, and the icon's safe-zone geometry were all confirmed by running
 something, not by reasoning about it.
+
+**Structural decisions were questioned, not just code.** The `:core-di` removal started as
+"why do we have a whole module for this?" — a question about a build-level choice that had
+been committed weeks earlier, was working, and was never going to announce itself. Generated
+architecture is the hardest output to audit precisely because it looks deliberate: a module
+boundary reads as a decision someone made, even when the reasoning behind it was never checked.
 
 **Scope was held.** Suggested work that was real but out of scope was deferred deliberately
 rather than absorbed — the search-query hoist is recorded in Pending work instead of being

@@ -55,7 +55,6 @@ ksp {
 dependencies {
     testImplementation(project(":test-utils"))
     api(project(":domain"))
-    implementation(project(":core-di"))
 
     // Retrofit
     implementation(libs.retrofit)
