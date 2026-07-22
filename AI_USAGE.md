@@ -1,7 +1,12 @@
 # AI Usage
 
 How AI assistance was used to build MyNextFavArtist, per the project's transparency
-requirements.
+requirements: which tools were used, what for, and what they produced that was rewritten or
+rejected — and, running through all of it, how the output was directed and checked rather than
+taken on trust.
+
+Throughout, **the developer** means the human engineer directing the work. Where something was
+caught, questioned, or overruled, this document says who did it.
 
 ## Tools used
 
@@ -97,26 +102,32 @@ grown to explaining single decisions at paragraph length.
 
 ## What the AI produced that was rewritten or rejected
 
-- **`Outcome` → `Result`.** The typed error-handling pattern itself (`Result`, `DataError`, and
-  the `map`/`onSuccess`/`onFailure` helpers around them) is human-designed, ported from the
-  developer's earlier project, not an AI invention. The generated plan proposed keeping the
-  original name `Outcome` for fidelity; corrected before any code was written to `Result`, the
-  name already established for this reusable pattern.
-- **A broken first draft of `AlbumArtCard`'s fallback.** An early version tried to build the
-  "no cover art" placeholder from `rememberAsyncImagePainter(model = null)`, which doesn't
-  produce a meaningful image at all. Caught and rewritten before it was ever built, in favour
-  of a local vector drawable.
-- **A single-use `PullToRefresh` wrapper.** Written as a pass-through around Material3's
-  `PullToRefreshBox` with nothing added. A later review by the developer flagged it as
-  indirection for its own sake; removed and inlined into `HomeScreen`.
-- **A misdiagnosed IPv6-routing bug.** The emulator resolved an IPv6 address for
-  `musicbrainz.org` it appeared unable to route to, so an IPv4-preferring `Dns` was added.
-  The developer then tested it on the emulator directly, found the same failures happening
-  with the filter disabled — and reproducing in the device browser, outside the app entirely —
-  and made the call to remove it. The diagnosis was wrong; the fix was treating a symptom that
-  had another cause.
-- **Assorted UI-overhaul output**, listed under [UI overhaul](#ui-overhaul) below, plus the
-  review findings that didn't survive verification, listed at the top.
+- **`Outcome` → `Result`** — *caught by the developer, before implementation.* The typed
+  error-handling pattern itself is human-designed, ported from the developer's earlier project,
+  not an AI invention. The generated plan proposed keeping the original name `Outcome` for
+  fidelity. The developer's standing preference for this reusable pattern is `Result`, so the
+  plan was corrected before a line of it was written.
+- **A single-use `PullToRefresh` wrapper** — *caught by the developer, in review.* Written as a
+  pass-through around Material3's `PullToRefreshBox` that added nothing. It compiled, it worked,
+  and it would have survived indefinitely; the developer read it, called it indirection for its
+  own sake, and had it inlined into `HomeScreen`.
+- **A misdiagnosed IPv6-routing bug** — *caught by the developer, on the emulator.* The
+  emulator resolved an IPv6 address for `musicbrainz.org` it appeared unable to route to, so an
+  IPv4-preferring `Dns` was added. The developer tested that theory directly: disabled the
+  filter, saw the same failures, then reproduced them in the device browser with the app out of
+  the picture entirely — and made the call to remove it. The diagnosis was wrong and the fix was
+  treating a symptom of something else.
+- **`backup_rules.xml` and `data_extraction_rules.xml`** — *caught by the developer, in review.*
+  Wizard-generated templates carried into the project unexamined and never given real
+  `include`/`exclude` entries. The developer asked what they were actually doing; the answer was
+  nothing, so they went, along with the corresponding manifest attributes.
+- **A broken first draft of `AlbumArtCard`'s fallback** — *caught during implementation.* An
+  early version tried to build the "no cover art" placeholder from
+  `rememberAsyncImagePainter(model = null)`, which doesn't produce a meaningful image at all.
+  Rewritten to use a local vector drawable before it was ever built.
+- **Assorted UI-overhaul output**, listed under [UI overhaul](#ui-overhaul) below — all of it
+  caught by the developer — plus the review findings that didn't survive verification, listed
+  at the top.
 
 ## What was not ported faithfully, and why
 
@@ -140,10 +151,6 @@ project's, or the Studio wizard's — rather than anything the AI invented.
   `Success`, so first-time users saw a bare "Delete All" button over nothing. It was ported
   faithfully because nothing about the code looked wrong on inspection — only manual testing
   surfaced it. Empty results now use a dedicated `BaseUiState.Empty`.
-- **`backup_rules.xml` and `data_extraction_rules.xml` removed.** Wizard-generated templates,
-  carried into the project unexamined and never given real `include`/`exclude` entries; the app
-  has no local data needing custom backup handling. Removed at the developer's request after a
-  review question, along with the corresponding manifest attributes.
 
 ## UI overhaul
 
@@ -159,14 +166,50 @@ a spinner for every loading state. Opus rebuilt the presentation layer:
 
 Verified on a Pixel 10 emulator in light and dark.
 
-**Nothing here went in unreviewed.** The developer went through the changeset file by file
-before it was committed, and several things changed as a result — the details hero lost a pair
-of redundant `Box` wrappers, `ArtistInformation` moved from `Spacer`s to `Arrangement.spacedBy`
-with both gaps collapsed to 4dp, `EmptyStateView` was cut from nine parameters to seven by
-grouping its button into one `EmptyStateAction` and its hardcoded `.dp` replaced with a token,
-and a proposal to invent a component to fill the empty space in a picture-less hero was
-rejected in favour of leaving the title to carry it. Several of the discarded findings listed
-above came out of the same pass.
+**Nothing here went in unreviewed.** The developer read the changeset file by file before it
+was committed. What changed as a result:
+
+- **The details hero lost a pair of redundant `Box` wrappers** — the developer asked whether
+  both were necessary. Neither was: two chained `background` modifiers on the `Column` paint in
+  the same order, so the wrappers and their `matchParentSize` came out.
+- **`ArtistInformation` moved from `Spacer`s to `Arrangement.spacedBy`**, both gaps collapsed
+  to 4dp, after the developer asked what a `Spacer` bought over a margin.
+- **`EmptyStateView` was cut from nine parameters to seven** — the developer holds a standing
+  limit of seven and caught the breach, along with a hardcoded `.dp` that should have been a
+  token. Its label and click handler became one `EmptyStateAction`.
+- **A proposal to invent a component** filling the empty space in a picture-less hero was
+  rejected outright: "we can make the best we can with just the title."
+
+Several of the discarded findings listed at the top came out of this same pass.
+
+## Directing the tools, and checking their work
+
+The three requirements above are about the tools. This section is about the part that isn't:
+the output was steered and audited, not accepted.
+
+**Standing constraints, set once and enforced.** A seven-parameter ceiling on functions. No
+hardcoded dimensions — every `.dp` goes through the `Dimensions` token object. Both were
+enforced by the developer catching breaches in review, not by a linter.
+
+**Questions rather than instructions.** Most corrections above started as a question — "is
+this necessary?", "what does this buy us?", "why is there so much space here?" — which leaves
+room for the answer to be "it is necessary, and here's why". Several times it was:
+
+- Two separate questions about lambdas causing recompositions ended with the Compose compiler
+  reports showing every screen already `restartable skippable`. No change made.
+- A question about the search query living in both `SavedStateHandle` and `rememberSaveable`
+  ended with an on-device test showing the two never diverge. The duplication is real and is
+  logged under [Pending work](README.md#pending-work), but it isn't the bug it looked like.
+
+**Claims were made to produce evidence.** "It doesn't recompose" was not accepted as an answer;
+the compiler reports were turned on to check. "The IPv6 filter fixed it" was not accepted
+either — the developer disabled it and reproduced the failure without it. The rate limit,
+the skipping behaviour, and the icon's safe-zone geometry were all confirmed by running
+something, not by reasoning about it.
+
+**Scope was held.** Suggested work that was real but out of scope was deferred deliberately
+rather than absorbed — the search-query hoist is recorded in Pending work instead of being
+folded into a UI commit.
 
 ## What could not be fully verified
 
