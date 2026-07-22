@@ -96,14 +96,23 @@ Mockito-Kotlin + Truth), currently 89 tests.
   developer decided against it: better to let the title carry the space than to manufacture
   content for it.
 
-**Documentation.** The README and this file were both drafted by Claude Code and then edited
-down by the developer, repeatedly. The models overexplain: they reach for a paragraph where a
-sentence carries the same information, restate in a summary what the section above already
-said, and pad a finding with the reasoning that produced it. One pass cut this document by a
-third; the README lost a "Best Practices" section listing null safety and consistent
-formatting, true of any Kotlin project and therefore worth nothing to a reader.
+**Documentation.** The README, this file, and the KDoc and inline comments across the codebase
+were all drafted by Claude Code and then edited by hand, repeatedly. The models overexplain:
+they reach for a paragraph where a sentence carries the same information, restate in a summary
+what the section above already said, and pad a finding with the reasoning that produced it.
+One pass cut this document by a third; the README lost a "Best Practices" section listing null
+safety and consistent formatting, true of any Kotlin project and therefore worth nothing to a
+reader.
 
-It is a standing tendency rather than a one-off — this file has since grown past its
+The same editing went into the code comments, one class at a time. Generated comments tend to
+narrate — restating in prose what the line below plainly does — and the useful ones are the
+ones explaining a decision the code can't show you: why `RateLimitInterceptor` blocks with
+`Thread.sleep` and measures with `nanoTime` rather than `currentTimeMillis`, why
+`heroTopClearance` exists at all, why `EmptyStateAction` groups a label with its handler
+instead of taking two nullable parameters. Getting from the first kind to the second was manual
+work, done by the developer file by file, not something the models arrived at on their own.
+
+It is a standing tendency rather than a solved problem — this file has since grown past its
 post-trim length again, and will need the same treatment.
 
 ## What the AI produced that was rewritten or rejected
@@ -217,13 +226,18 @@ something, not by reasoning about it.
 rather than absorbed — the search-query hoist is recorded in Pending work instead of being
 folded into a UI commit.
 
-**The prose was edited too, not just the code.** Generated documentation reads as finished
-long before it is: confident, well-organised, and a third longer than it needs to be. Both
-documents in this repo were cut down by the developer — sections removed for saying nothing a
-reader couldn't assume, explanations compressed to their conclusion, and in this file, an
-inconsistent voice that referred to the same person as both "mine" and "the user" unified.
-Reviewing generated prose is the same job as reviewing generated code, and it is easier to
-skip, because nothing fails when the writing is merely bloated.
+**The prose was edited too, not just the code.** Generated writing reads as finished long
+before it is: confident, well-organised, and a third longer than it needs to be. Both markdown
+documents were cut down by the developer — sections removed for saying nothing a reader
+couldn't assume, explanations compressed to their conclusion, and in this file, an inconsistent
+voice that called the same person both "mine" and "the user" unified. The same pass went
+through the KDoc and comments in the source, class by class, replacing narration of what the
+code does with the reason it does it.
+
+This is the easiest review to skip, because nothing fails when the writing is merely bloated —
+the build stays green and the tests still pass. It is also the part a future reader depends on
+most, since a comment that restates the code is worse than no comment: it costs a line and
+teaches nothing.
 
 ## What could not be fully verified
 
