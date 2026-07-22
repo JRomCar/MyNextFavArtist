@@ -10,12 +10,23 @@ requirements.
 - **Sonnet 5 as the builder** — planning, implementation across all layers, tests, and
   on-device debugging.
 - **Opus 4.8 as the reviewer** — a separate pass per layer (domain, data, ui), reading for
-  latent bugs rather than writing features. Findings were re-verified before being trusted;
-  one claimed bug (an `InterruptedException` path in `RateLimitInterceptor`) didn't hold up
-  and was discarded. Confirmed findings that weren't fixed are listed under
-  [Pending work](README.md#pending-work).
+  latent bugs rather than writing features. The one exception is the UI overhaul, where Opus
+  was the builder — see below.
 
-The one exception is the UI overhaul, where Opus was the builder — see below.
+Every finding was re-verified before being acted on, and a fair number didn't survive that
+check. For example:
+
+- An `InterruptedException` path in `RateLimitInterceptor`, claimed as a swallowed
+  cancellation — it didn't hold up on re-reading and was discarded.
+- A suspected divergence between the search query held in `SavedStateHandle` and the copy in
+  `rememberSaveable`. Testing it on the emulator showed both reset together, because switching
+  tabs disposes the whole navigation entry. Real duplication, but no bug.
+- Two separate worries that lambdas passed to composables (in `NavDisplay`'s entries, and in
+  `FavoritesContent`'s `when`) were forcing recompositions. The Compose compiler reports showed
+  every screen `restartable skippable`, so neither was costing anything.
+
+Confirmed findings that weren't fixed are listed under
+[Pending work](README.md#pending-work).
 
 ## Device tooling
 
@@ -39,11 +50,11 @@ Two caveats worth stating plainly:
 
 ## What it was used for
 
-**Research and planning.** Explored an earlier project of mine built on the same architecture
-for its module layout, MVI pattern, and testing conventions. Checked the MusicBrainz API and
-Cover Art Archive directly rather than assuming their behaviour, and verified the curated
-seed-artist MBIDs against the live search API instead of recalling them. The resulting plan
-was reviewed and approved before any code.
+**Research and planning.** Explored an earlier project by the same developer, built on the
+same architecture, for its module layout, MVI pattern, and testing conventions. Checked the
+MusicBrainz API and Cover Art Archive directly rather than assuming their behaviour, and
+verified the curated seed-artist MBIDs against the live search API instead of recalling them.
+The resulting plan was reviewed and approved by the developer before any code.
 
 **Scaffolding.** Multi-module Gradle setup, Hilt modules, Room database/DAO, Retrofit
 interface and DTOs — ported from that project and adapted to MusicBrainz.
@@ -60,14 +71,14 @@ Porting an existing architecture meant deciding, repeatedly, whether the origina
 here:
 
 - **`Outcome` → `Result`.** The whole typed error-handling pattern (`Result`, `DataError`, and
-  the `map`/`onSuccess`/`onFailure` helpers around them) is human-designed, ported from an
-  earlier project of mine, not an AI invention. The plan first said to port the name `Outcome`
-  verbatim; corrected before implementation to `Result`, the name already used for this
-  reusable pattern.
+  the `map`/`onSuccess`/`onFailure` helpers around them) is human-designed, ported from the
+  developer's earlier project, not an AI invention. The plan first said to port the name
+  `Outcome` verbatim; corrected before implementation to `Result`, the name already used for
+  this reusable pattern.
 - **`BaseUiState` made generic.** The whole `Base` states pattern (`BaseUiState`,
-  `BaseUiEffect`, `BaseViewModel`) is human-designed, ported from an earlier project of mine,
-  not an AI invention. The original hardcodes `Success` to a single entity list; this app has
-  two payload types, so a straight port wouldn't have compiled — made generic as an
+  `BaseUiEffect`, `BaseViewModel`) is human-designed, ported from the developer's earlier
+  project, not an AI invention. The original hardcodes `Success` to a single entity list; this
+  app has two payload types, so a straight port wouldn't have compiled — made generic as an
   improvement on top of the ported design.
 - **`DetailsUiState` split into three fields.** Details has two independent async concerns
   (favourite toggle, release-group fetch). Sharing one state would blank the loaded album
@@ -75,22 +86,24 @@ here:
 - **Material3 `PullToRefreshBox` used directly.** The original uses the experimental Material2
   API and wraps it in a custom `PullToRefresh` composable; matching the Material2 dependency
   wasn't worth it, so the port moved straight to Material3. The wrapper itself stuck around as
-  a single-use pass-through until a later user review flagged it as unnecessary indirection;
-  removed at the user's request and inlined into `HomeScreen`.
+  a single-use pass-through until a later review by the developer flagged it as unnecessary
+  indirection; removed at their request and inlined into `HomeScreen`.
 - **A global `lateinit var colorScheme` dropped.** The original sets a top-level mutable as a
   composition side effect and reads it from several components. Every port that used it now
   reads `MaterialTheme.colorScheme` directly.
-- **An IPv6-routing bug, found only by running the app.** The emulator resolved an IPv6
-  address for `musicbrainz.org` it couldn't route to. Fixed with an IPv4-preferring `Dns`,
-  then removed once the same failures reproduced on a real device with the filter off —
-  confirming it was never the cause.
+- **A misdiagnosed IPv6-routing bug.** The emulator resolved an IPv6 address for
+  `musicbrainz.org` it appeared unable to route to, so an IPv4-preferring `Dns` was added.
+  The developer then tested it on the emulator directly, found the same failures happening
+  with the filter disabled — and reproducing in the device browser, outside the app entirely —
+  and made the call to remove it. The diagnosis was wrong; the fix was treating a symptom that
+  had another cause.
 - **An empty-state bug in `FavoritesViewModel`.** An empty favourites list was reported as
   `Success`, so first-time users saw a bare "Delete All" button over nothing. It was ported
   faithfully because nothing about the code looked wrong on inspection — only manual testing
   surfaced it. Empty results now use a dedicated `BaseUiState.Empty`.
 - **`backup_rules.xml` and `data_extraction_rules.xml` removed.** Both were the untouched
   wizard-generated templates with no real `include`/`exclude` entries, and the app has no
-  local data needing custom backup handling. Removed at the user's request after a review
+  local data needing custom backup handling. Removed at the developer's request after a review
   question, along with the corresponding manifest attributes.
 
 ## UI overhaul
@@ -106,6 +119,15 @@ a spinner for every loading state. Opus rebuilt the presentation layer:
 - Clearing all favourites now asks first.
 
 Verified on a Pixel 10 emulator in light and dark.
+
+**Nothing here went in unreviewed.** The developer went through the changeset file by file
+before it was committed, and several things changed as a result — the details hero lost a pair
+of redundant `Box` wrappers, `ArtistInformation` moved from `Spacer`s to `Arrangement.spacedBy`
+with both gaps collapsed to 4dp, `EmptyStateView` was cut from nine parameters to seven by
+grouping its button into one `EmptyStateAction` and its hardcoded `.dp` replaced with a token,
+and a proposal to invent a component to fill the empty space in a picture-less hero was
+rejected in favour of leaving the title to carry it. Several of the discarded findings listed
+above came out of the same pass.
 
 ## What could not be fully verified
 
