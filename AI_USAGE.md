@@ -96,9 +96,15 @@ Mockito-Kotlin + Truth), currently 89 tests.
   developer decided against it: better to let the title carry the space than to manufacture
   content for it.
 
-**Documentation.** The README and this file were both drafted by Claude Code, then revised on
-the developer's instructions — including a pass that cut this document by a third when it had
-grown to explaining single decisions at paragraph length.
+**Documentation.** The README and this file were both drafted by Claude Code and then edited
+down by the developer, repeatedly. The models overexplain: they reach for a paragraph where a
+sentence carries the same information, restate in a summary what the section above already
+said, and pad a finding with the reasoning that produced it. One pass cut this document by a
+third; the README lost a "Best Practices" section listing null safety and consistent
+formatting, true of any Kotlin project and therefore worth nothing to a reader.
+
+It is a standing tendency rather than a one-off — this file has since grown past its
+post-trim length again, and will need the same treatment.
 
 ## What the AI produced that was rewritten or rejected
 
@@ -210,6 +216,14 @@ something, not by reasoning about it.
 **Scope was held.** Suggested work that was real but out of scope was deferred deliberately
 rather than absorbed — the search-query hoist is recorded in Pending work instead of being
 folded into a UI commit.
+
+**The prose was edited too, not just the code.** Generated documentation reads as finished
+long before it is: confident, well-organised, and a third longer than it needs to be. Both
+documents in this repo were cut down by the developer — sections removed for saying nothing a
+reader couldn't assume, explanations compressed to their conclusion, and in this file, an
+inconsistent voice that referred to the same person as both "mine" and "the user" unified.
+Reviewing generated prose is the same job as reviewing generated code, and it is easier to
+skip, because nothing fails when the writing is merely bloated.
 
 ## What could not be fully verified
 
