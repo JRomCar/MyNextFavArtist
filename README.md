@@ -98,12 +98,16 @@ the layers on either side of it:
 
 | Module | Responsibility |
 |---|---|
-| `app/` | Entry point, `MainActivity`, Hilt modules wiring the graph together |
+| `app/` | Entry point, `MainActivity`, Hilt modules and qualifiers wiring the graph together |
 | `ui/` | Compose screens, ViewModels (MVI), navigation, theme |
 | `domain/` | Use cases, entities, repository interfaces, the `Result`/`DataError` model |
 | `data/` | Repository implementations, Retrofit API, Room persistence, interceptors |
-| `core-di/` | DI qualifiers shared across modules without dragging in Hilt itself |
 | `test-utils/` | Shared test fixtures and helpers |
+
+Only `:app` and `:ui` know Hilt exists — `:app` hosts the modules and qualifiers, `:ui`
+annotates its ViewModels. `:domain` is a plain `kotlin("jvm")` module with no Android or DI
+dependency at all, and `:data` is wired entirely through `@Provides` methods in `:app` rather
+than annotating its own classes, so it needs no annotation processor either.
 
 **MVI in the UI layer.** Each screen dispatches sealed `*UiAction`s through a single
 `handleAction()`, and renders an immutable `StateFlow<BaseUiState<T>>`. One-shot events
