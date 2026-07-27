@@ -32,7 +32,7 @@ class SearchViewModel @Inject constructor(
     // Backed by SavedStateHandle so the typed query survives process death
     private val searchQuery: StateFlow<String> = savedStateHandle.getStateFlow(SEARCH_QUERY_KEY, "")
 
-    override fun onFirstSubscription() = observeSearchQuery()
+    override fun onSubscribed() = observeSearchQuery()
 
     fun handleAction(action: SearchUiAction) {
         when (action) {

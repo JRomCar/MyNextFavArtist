@@ -83,7 +83,7 @@ class FavoritesViewModelTest : TestBase() {
 
     @Test
     fun `removeAllFavorites success - resets to Empty`() = runUnconfinedTest {
-        // onFirstSubscription also starts loadFavoriteArtists - stub it to an empty flow so it
+        // onSubscribed also starts loadFavoriteArtists - stub it to an empty flow so it
         // doesn't interfere with (or NPE against) this test's removeAllFavoriteArtists flow.
         whenever(observeFavoriteArtists()).thenReturn(flowOf())
         whenever(removeAllFavoriteArtists()).thenReturn(Result.Success(Unit))

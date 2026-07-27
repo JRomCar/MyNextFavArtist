@@ -215,7 +215,7 @@ just "fix the one with `init`" but all four ViewModels, and a change to `BaseVie
 rather than four separate workarounds.
 
 `BaseViewModel.uiState` now derives from `stateIn(viewModelScope,
-SharingStarted.WhileSubscribed(5_000), initialState)`, with a new `onFirstSubscription()` hook
+SharingStarted.WhileSubscribed(5_000), initialState)`, with a new `onSubscribed()` hook
 subclasses override instead of loading from a constructor or a Compose effect. The load starts
 the first time a screen actually subscribes; the 5-second grace window means a quick tab switch
 and back doesn't restart it, while a longer absence does. `DetailsViewModel`'s retry action now
@@ -228,8 +228,8 @@ One consequence scoped as deliberately out of this change, logged under
 [Pending work](README.md#pending-work): the ongoing collectors (Favorites, Search, Details'
 favourite-status) keep running once started rather than stopping when unsubscribed. Landing this
 after `DetailsViewModel`'s assisted-injection change (above) meant Details didn't need a
-composable-side `LaunchedEffect` to kick off its load at all — `onFirstSubscription` already has
-the artist it needs, so both of its loads simply start the moment `uiState` gets a subscriber.
+composable-side `LaunchedEffect` to kick off its load at all — `onSubscribed` already has the
+artist it needs, so both of its loads simply start the moment `uiState` gets a subscriber.
 
 The test migration was the larger part of the diff. Every existing ViewModel test read
 `uiState.value` without ever collecting `uiState`, which stops working once state delivery is

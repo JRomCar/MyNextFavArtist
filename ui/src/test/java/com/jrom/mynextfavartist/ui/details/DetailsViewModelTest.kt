@@ -35,7 +35,7 @@ class DetailsViewModelTest : TestBase() {
 
     @Before
     fun setUp() {
-        // Safe default so subscribing to uiState (which triggers onFirstSubscription's
+        // Safe default so subscribing to uiState (which triggers onSubscribed's
         // favorite-status load) never hits an unstubbed mock in tests that don't care about the
         // loaded value itself - override per-test as needed. getArtistReleaseGroups can't be
         // defaulted here too since it's suspend and this isn't a suspend function; tests that
@@ -103,7 +103,7 @@ class DetailsViewModelTest : TestBase() {
             BaseUiState.Success(MockData.testReleaseGroupsEntityList),
             sut.uiState.value.releaseGroups
         )
-        // observeIsFavorite's collector was only ever started once, by onFirstSubscription -
+        // observeIsFavorite's collector was only ever started once, by onSubscribed -
         // the retry above didn't restart it.
         verify(observeIsFavorite).invoke(artist.mbid)
 

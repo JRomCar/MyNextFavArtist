@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 // Each ArtistDetails back-stack entry is scoped to its own ViewModelStore (see
 // rememberViewModelStoreNavEntryDecorator in MyNextFavArtistApp), so a given instance only ever
-// serves one artist - it's supplied once, via assisted injection, and its own onFirstSubscription
+// serves one artist - it's supplied once, via assisted injection, and its own onSubscribed hook
 // starts loading as soon as something collects uiState, with no action needed to kick it off.
 @HiltViewModel(assistedFactory = DetailsViewModel.Factory::class)
 class DetailsViewModel @AssistedInject constructor(
@@ -37,7 +37,7 @@ class DetailsViewModel @AssistedInject constructor(
         fun create(artist: Artist): DetailsViewModel
     }
 
-    override fun onFirstSubscription() {
+    override fun onSubscribed() {
         observeFavoriteStatus()
         loadReleaseGroups()
     }
@@ -79,7 +79,7 @@ class DetailsViewModel @AssistedInject constructor(
 
     private fun toggleFavorite() {
         updateState { it.copy(isFavoriteActionInProgress = true) }
-        if (uiState.value.isFavorite) {
+        if (currentState.isFavorite) {
             removeFavorite()
         } else {
             saveFavorite()
