@@ -163,6 +163,18 @@ Known and deliberately deferred, not oversights:
 - **`UiText.StringResource` is unstable to the Compose compiler**, because `args: List<Any>`
   is an interface type. Harmless today under strong skipping, but an immutable list type would
   make it stable outright.
+- **A pending change moving ViewModel state loading from `init`/`LaunchedEffect(Unit)` to a
+  lazy, subscription-gated `stateIn` won't fully stop background work when a screen is
+  unsubscribed.** Jobs started from the new load hook would live in `viewModelScope`, not tied
+  to `stateIn`'s own sharing-coroutine teardown, so the three ongoing collectors (Favorites,
+  Search, Details' favorite-status) would keep running for the ViewModel's full lifetime once
+  started, same as today. Genuinely stopping them on unsubscribe would mean restructuring each
+  load as a pure `Flow<State>` merged into `uiState` directly — a bigger change, left for later.
+- **That same change would still have `DetailsScreen` push its target artist in via
+  `LaunchedEffect(artist)`** rather than the ViewModel resolving it on its own, because Nav3
+  hands route arguments to the composable, not to a `SavedStateHandle` the ViewModel could read.
+  Wiring Nav3 args into `SavedStateHandle` (if the navigation3 versions in use support it) could
+  remove this composable-side push entirely.
 
 ---
 
