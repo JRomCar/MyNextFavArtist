@@ -163,21 +163,13 @@ Known and deliberately deferred, not oversights:
 - **`UiText.StringResource` is unstable to the Compose compiler**, because `args: List<Any>`
   is an interface type. Harmless today under strong skipping, but an immutable list type would
   make it stable outright.
-- **A pending change moving ViewModel state loading from `init`/`LaunchedEffect(Unit)` to a
-  lazy, subscription-gated `stateIn` ties loading to observation, but not *unloading*.**
-  `WhileSubscribed` cancels exactly one coroutine — the one collecting the upstream inside
-  `stateIn`. Work started from the new hook goes to `viewModelScope`, a sibling with no
-  structural relationship to that collector, so cancelling the collector doesn't touch it. In
-  practice this leaves two Room observers running after their screen is gone (Favorites, and
-  Details' favourite-status); Home's load is a one-shot that completes on its own, and Search's
-  chain parks idle because its query can only change from the UI.
-
-  The fix is to give the subscription a real scope rather than to restructure state: expose
-  `uiState` as a `channelFlow` that collects the retained `MutableStateFlow` and hands its
-  `ProducerScope` to subclasses, so observers launched there are children of the subscription
-  and die with it. Deliberately *not* routing every state mutation through that scope as well —
-  that would cancel in-flight writes like `ToggleFavorite`, which must complete, and (with a
-  `scan`-based reducer pipeline) reset retained state on every restart.
+- **A pending change makes ViewModel loads start lazily on subscription, but they still don't
+  stop when a screen is unsubscribed.** Favorites' and Details' background collectors keep
+  running after their screen is gone. Fixing this means giving that background work a scope
+  tied to the subscription itself, not `viewModelScope`.
+- **`DetailsViewModel` still receives its target artist from the composable via
+  `LaunchedEffect(artist)`** instead of at construction. A fix using Hilt assisted injection
+  exists on another branch, not yet merged.
 
 ---
 
