@@ -1,7 +1,6 @@
 package com.jrom.mynextfavartist.ui.search
 
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.viewModelScope
 import com.jrom.mynextfavartist.domain.entities.Artist
 import com.jrom.mynextfavartist.domain.error.DataError
 import com.jrom.mynextfavartist.domain.fold
@@ -20,7 +19,6 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -34,9 +32,7 @@ class SearchViewModel @Inject constructor(
     // Backed by SavedStateHandle so the typed query survives process death
     private val searchQuery: StateFlow<String> = savedStateHandle.getStateFlow(SEARCH_QUERY_KEY, "")
 
-    init {
-        observeSearchQuery()
-    }
+    override fun onFirstSubscription() = observeSearchQuery()
 
     fun handleAction(action: SearchUiAction) {
         when (action) {
@@ -47,32 +43,38 @@ class SearchViewModel @Inject constructor(
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     private fun observeSearchQuery() {
-        searchQuery
-            .debounce(300.milliseconds)
-            .distinctUntilChanged() // Only process if the query has actually changed
-            .flatMapLatest { query ->
-                if (query.length < MIN_QUERY_LENGTH) {
-                    setState(BaseUiState.Initial)
-                    emptyFlow()
-                } else {
-                    setState(BaseUiState.Loading)
-                    searchArtists(query).map { result ->
-                        result.fold(
-                            onSuccess = { setState(BaseUiState.Success(it)) },
-                            onFailure = { error -> setState(BaseUiState.Error(error.asUiText(), error.asUiIcon())) },
-                        )
+        // Keyed so a resubscribe after being away doesn't stack a second concurrent collector
+        // of searchQuery alongside one already running from an earlier subscription.
+        launchExclusive(Key.SearchQuery) {
+            searchQuery
+                .debounce(300.milliseconds)
+                .distinctUntilChanged() // Only process if the query has actually changed
+                .flatMapLatest { query ->
+                    if (query.length < MIN_QUERY_LENGTH) {
+                        setState(BaseUiState.Initial)
+                        emptyFlow()
+                    } else {
+                        setState(BaseUiState.Loading)
+                        searchArtists(query).map { result ->
+                            result.fold(
+                                onSuccess = { setState(BaseUiState.Success(it)) },
+                                onFailure = { error -> setState(BaseUiState.Error(error.asUiText(), error.asUiIcon())) },
+                            )
+                        }
                     }
+                }.catch {
+                    val error = DataError.Network.UNKNOWN
+                    setState(BaseUiState.Error(error.asUiText(), error.asUiIcon()))
                 }
-            }.catch {
-                val error = DataError.Network.UNKNOWN
-                setState(BaseUiState.Error(error.asUiText(), error.asUiIcon()))
-            }
-            .launchIn(viewModelScope)
+                .collect {}
+        }
     }
 
     private fun onArtistClicked(artist: Artist) {
         sendEffect(BaseUiEffect.NavigateToDetail(artist))
     }
+
+    private enum class Key { SearchQuery }
 
     private companion object {
         const val SEARCH_QUERY_KEY = "search_query"

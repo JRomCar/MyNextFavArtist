@@ -2,11 +2,12 @@ package com.jrom.mynextfavartist.ui.details
 
 import com.jrom.mynextfavartist.ui.error.UiText
 
-// No longer carries the artist - DetailsViewModel now receives it once via assisted injection
-// (see DetailsViewModel.Factory), so these actions don't need to thread it through.
+// No longer carries the artist, and no longer has a "load" action - DetailsViewModel receives
+// the artist once via assisted injection (see DetailsViewModel.Factory) and triggers its own
+// initial load on first subscription, so neither needs to be threaded through an action.
 sealed interface DetailsUiAction {
-    data object LoadArtistDetails : DetailsUiAction
     data object ToggleFavorite : DetailsUiAction
+    data object RetryReleaseGroups : DetailsUiAction
     data object OnBackRequest : DetailsUiAction
 }
 

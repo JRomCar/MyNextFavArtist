@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -38,10 +37,6 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val screenDescription = stringResource(R.string.home_screen_description)
-
-    LaunchedEffect(Unit) {
-        viewModel.handleAction(HomeUiAction.LoadArtists)
-    }
 
     viewModel.uiEffect.collectWithEffect { effect ->
         when (effect) {

@@ -38,7 +38,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -106,10 +105,6 @@ fun DetailsScreen(
         },
         label = "detailsBarColor",
     )
-
-    LaunchedEffect(artist) {
-        viewModel.handleAction(DetailsUiAction.LoadArtistDetails)
-    }
 
     viewModel.uiEffect.collectWithEffect { effect ->
         when (effect) {
@@ -222,7 +217,7 @@ fun DetailsContent(
         albumsSection(
             modifier = sidePadding,
             releaseGroups = state.releaseGroups,
-            onRetryClick = { onAction(DetailsUiAction.LoadArtistDetails) },
+            onRetryClick = { onAction(DetailsUiAction.RetryReleaseGroups) },
         )
     }
 }

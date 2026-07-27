@@ -42,26 +42,33 @@ class FavoritesViewModelTest : TestBase() {
     @Test
     fun `loadFavoriteArtists success with results - uiState is Success with artists`() = runUnconfinedTest {
         whenever(observeFavoriteArtists()).thenReturn(flowOf(Result.Success(artistsList)))
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
 
         sut.handleAction(FavoritesUiAction.LoadArtists)
         advanceUntilIdle()
 
         assertEquals(BaseUiState.Success(artistsList), sut.uiState.value)
+
+        stateJob.cancel()
     }
 
     @Test
     fun `loadFavoriteArtists success with empty list - uiState falls back to Empty`() = runUnconfinedTest {
         whenever(observeFavoriteArtists()).thenReturn(flowOf(Result.Success(emptyList())))
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
 
         sut.handleAction(FavoritesUiAction.LoadArtists)
         advanceUntilIdle()
 
         assertEquals(BaseUiState.Empty, sut.uiState.value)
+
+        stateJob.cancel()
     }
 
     @Test
     fun `loadFavoriteArtists failure - uiState is Error`() = runUnconfinedTest {
         whenever(observeFavoriteArtists()).thenReturn(flowOf(Result.Failure(DataError.Local.DB_READ_ERROR)))
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
 
         sut.handleAction(FavoritesUiAction.LoadArtists)
         advanceUntilIdle()
@@ -70,21 +77,31 @@ class FavoritesViewModelTest : TestBase() {
         val errorText = errorState.errorText as UiText.StringResource
         assertEquals(R.string.db_read_error, errorText.id)
         assertEquals(DataError.Local.DB_READ_ERROR.asUiIcon(), errorState.errorIcon)
+
+        stateJob.cancel()
     }
 
     @Test
     fun `removeAllFavorites success - resets to Empty`() = runUnconfinedTest {
+        // onFirstSubscription also starts loadFavoriteArtists - stub it to an empty flow so it
+        // doesn't interfere with (or NPE against) this test's removeAllFavoriteArtists flow.
+        whenever(observeFavoriteArtists()).thenReturn(flowOf())
         whenever(removeAllFavoriteArtists()).thenReturn(Result.Success(Unit))
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
 
         sut.handleAction(FavoritesUiAction.ClearAllSavedArtists)
         advanceUntilIdle()
 
         assertEquals(BaseUiState.Empty, sut.uiState.value)
+
+        stateJob.cancel()
     }
 
     @Test
     fun `removeAllFavorites failure - uiState is Error`() = runUnconfinedTest {
+        whenever(observeFavoriteArtists()).thenReturn(flowOf())
         whenever(removeAllFavoriteArtists()).thenReturn(Result.Failure(DataError.Local.DB_WRITE_ERROR))
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
 
         sut.handleAction(FavoritesUiAction.ClearAllSavedArtists)
         advanceUntilIdle()
@@ -93,6 +110,8 @@ class FavoritesViewModelTest : TestBase() {
         val errorText = errorState.errorText as UiText.StringResource
         assertEquals(R.string.db_write_error, errorText.id)
         assertEquals(DataError.Local.DB_WRITE_ERROR.asUiIcon(), errorState.errorIcon)
+
+        stateJob.cancel()
     }
 
     @Test

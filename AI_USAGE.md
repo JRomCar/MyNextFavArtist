@@ -205,6 +205,39 @@ knowing what to load.
 `DetailsUiAction.LoadArtistDetails` and `ToggleFavorite` dropped their `artist` payload as a
 direct consequence — the ViewModel already has it — rather than as a separate cleanup.
 
+## Lazy ViewModel state loading
+
+*Directed by the developer*, including the exact scope. Every screen's initial data load moved
+out of `init {}` (only `SearchViewModel` used it) and out of a `LaunchedEffect(Unit)` dispatching
+a load action on first composition (`Home`, `Favorites`, `Details`) — both start a fetch that
+isn't tied to whether anything is actually observing it yet. The developer's brief covered not
+just "fix the one with `init`" but all four ViewModels, and a change to `BaseViewModel` itself
+rather than four separate workarounds.
+
+`BaseViewModel.uiState` now derives from `stateIn(viewModelScope,
+SharingStarted.WhileSubscribed(5_000), initialState)`, with a new `onFirstSubscription()` hook
+subclasses override instead of loading from a constructor or a Compose effect. The load starts
+the first time a screen actually subscribes; the 5-second grace window means a quick tab switch
+and back doesn't restart it, while a longer absence does. `DetailsViewModel`'s retry action now
+only re-fetches release groups, not favourite status too — the two were previously bundled
+because both were triggered by the same `LoadArtistDetails` action, and re-running favourite
+status on every release-groups retry was always redundant once it became its own continuously
+running collector.
+
+One consequence scoped as deliberately out of this change, logged under
+[Pending work](README.md#pending-work): the ongoing collectors (Favorites, Search, Details'
+favourite-status) keep running once started rather than stopping when unsubscribed. Landing this
+after `DetailsViewModel`'s assisted-injection change (above) meant Details didn't need a
+composable-side `LaunchedEffect` to kick off its load at all — `onFirstSubscription` already has
+the artist it needs, so both of its loads simply start the moment `uiState` gets a subscriber.
+
+The test migration was the larger part of the diff. Every existing ViewModel test read
+`uiState.value` without ever collecting `uiState`, which stops working once state delivery is
+subscription-gated — `StateFlow.value` doesn't count as a subscriber, so an uncollected `uiState`
+would sit frozen at its initial value. Fixed by adding an explicit collector to each test before
+reading state, matching a pattern one test (`HomeViewModelTest`'s refresh test) already used for
+an unrelated reason.
+
 ## UI overhaul
 
 The screens shipped as working scaffolding — default Material colours, one typography token,

@@ -36,17 +36,21 @@ class HomeViewModelTest : TestBase() {
     @Test
     fun `load artists success - uiState is Success with artists`() = runUnconfinedTest {
         whenever(getHomeArtists()).thenReturn(Result.Success(artistsList))
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
 
         sut.handleAction(HomeUiAction.LoadArtists)
         advanceUntilIdle()
 
         assertEquals(BaseUiState.Success(artistsList), sut.uiState.value.artists)
         assertEquals(false, sut.uiState.value.isRefreshing)
+
+        stateJob.cancel()
     }
 
     @Test
     fun `load artists failure - uiState is Error`() = runUnconfinedTest {
         whenever(getHomeArtists()).thenReturn(Result.Failure(DataError.Network.UNKNOWN))
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
 
         sut.handleAction(HomeUiAction.LoadArtists)
         advanceUntilIdle()
@@ -56,11 +60,14 @@ class HomeViewModelTest : TestBase() {
         assertEquals(R.string.unknown_error, errorText.id)
         assertEquals(DataError.Network.UNKNOWN.asUiIcon(), errorState.errorIcon)
         assertEquals(false, sut.uiState.value.isRefreshing)
+
+        stateJob.cancel()
     }
 
     @Test
     fun `reload failure after a prior success keeps showing the cached list`() = runUnconfinedTest {
         whenever(getHomeArtists()).thenReturn(Result.Success(artistsList))
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
         sut.handleAction(HomeUiAction.LoadArtists)
         advanceUntilIdle()
         assertEquals(BaseUiState.Success(artistsList), sut.uiState.value.artists)
@@ -71,11 +78,14 @@ class HomeViewModelTest : TestBase() {
 
         assertEquals(BaseUiState.Success(artistsList), sut.uiState.value.artists)
         assertEquals(false, sut.uiState.value.isRefreshing)
+
+        stateJob.cancel()
     }
 
     @Test
     fun `refreshing a populated list sets isRefreshing without clearing the cached list`() = runUnconfinedTest {
         whenever(getHomeArtists()).thenReturn(Result.Success(artistsList))
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
         sut.handleAction(HomeUiAction.LoadArtists)
         advanceUntilIdle()
         assertEquals(BaseUiState.Success(artistsList), sut.uiState.value.artists)
@@ -92,6 +102,7 @@ class HomeViewModelTest : TestBase() {
         assertEquals(BaseUiState.Success(artistsList), sut.uiState.value.artists)
 
         job.cancel()
+        stateJob.cancel()
     }
 
     @Test

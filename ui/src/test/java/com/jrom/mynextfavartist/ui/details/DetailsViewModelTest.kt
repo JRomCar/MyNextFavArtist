@@ -35,6 +35,12 @@ class DetailsViewModelTest : TestBase() {
 
     @Before
     fun setUp() {
+        // Safe default so subscribing to uiState (which triggers onFirstSubscription's
+        // favorite-status load) never hits an unstubbed mock in tests that don't care about the
+        // loaded value itself - override per-test as needed. getArtistReleaseGroups can't be
+        // defaulted here too since it's suspend and this isn't a suspend function; tests that
+        // don't stub it themselves do so inline instead.
+        whenever(observeIsFavorite(artist.mbid)).thenReturn(flowOf(Result.Success(false)))
         sut = DetailsViewModel(
             artist = artist,
             observeIsFavorite = observeIsFavorite,
@@ -51,7 +57,7 @@ class DetailsViewModelTest : TestBase() {
             Result.Success(MockData.testReleaseGroupsEntityList)
         )
 
-        sut.handleAction(DetailsUiAction.LoadArtistDetails)
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
         advanceUntilIdle()
 
         val state = sut.uiState.value
@@ -60,6 +66,8 @@ class DetailsViewModelTest : TestBase() {
             BaseUiState.Success(MockData.testReleaseGroupsEntityList),
             state.releaseGroups
         )
+
+        stateJob.cancel()
     }
 
     @Test
@@ -69,21 +77,54 @@ class DetailsViewModelTest : TestBase() {
             Result.Failure(DataError.Network.UNKNOWN)
         )
 
-        sut.handleAction(DetailsUiAction.LoadArtistDetails)
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
         advanceUntilIdle()
 
         assertTrue(sut.uiState.value.releaseGroups is BaseUiState.Error)
+
+        stateJob.cancel()
+    }
+
+    @Test
+    fun `retrying release groups only re-fetches release groups, not favorite status`() = runUnconfinedTest {
+        whenever(getArtistReleaseGroups(artist.mbid)).thenReturn(Result.Failure(DataError.Network.UNKNOWN))
+
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
+        advanceUntilIdle()
+        assertTrue(sut.uiState.value.releaseGroups is BaseUiState.Error)
+
+        whenever(getArtistReleaseGroups(artist.mbid)).thenReturn(
+            Result.Success(MockData.testReleaseGroupsEntityList)
+        )
+        sut.handleAction(DetailsUiAction.RetryReleaseGroups)
+        advanceUntilIdle()
+
+        assertEquals(
+            BaseUiState.Success(MockData.testReleaseGroupsEntityList),
+            sut.uiState.value.releaseGroups
+        )
+        // observeIsFavorite's collector was only ever started once, by onFirstSubscription -
+        // the retry above didn't restart it.
+        verify(observeIsFavorite).invoke(artist.mbid)
+
+        stateJob.cancel()
     }
 
     @Test
     fun `toggle favorite calls saveFavorite when not already favorite`() = runUnconfinedTest {
+        whenever(getArtistReleaseGroups(artist.mbid)).thenReturn(Result.Success(emptyList()))
         whenever(saveFavoriteArtist(artist)).thenReturn(Result.Success(Unit))
+
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
+        advanceUntilIdle()
 
         sut.handleAction(DetailsUiAction.ToggleFavorite)
         advanceUntilIdle()
 
         verify(saveFavoriteArtist).invoke(artist)
         assertFalse(sut.uiState.value.isFavoriteActionInProgress)
+
+        stateJob.cancel()
     }
 
     @Test
@@ -96,7 +137,7 @@ class DetailsViewModelTest : TestBase() {
         )
         whenever(removeFavoriteArtist(artist.mbid)).thenReturn(Result.Success(Unit))
 
-        sut.handleAction(DetailsUiAction.LoadArtistDetails)
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
         advanceUntilIdle()
         assertTrue(sut.uiState.value.isFavorite)
 
@@ -105,16 +146,22 @@ class DetailsViewModelTest : TestBase() {
 
         verify(removeFavoriteArtist).invoke(artist.mbid)
         assertFalse(sut.uiState.value.isFavoriteActionInProgress)
+
+        stateJob.cancel()
     }
 
     @Test
     fun `save favorite failure emits ShowMessage effect and resets progress flag`() = runUnconfinedTest {
+        whenever(getArtistReleaseGroups(artist.mbid)).thenReturn(Result.Success(emptyList()))
         whenever(saveFavoriteArtist(artist)).thenReturn(Result.Failure(DataError.Local.DB_WRITE_ERROR))
 
         val emissions = mutableListOf<DetailsUiEffect>()
         val effectJob = launch(unconfinedTestDispatcher) {
             sut.uiEffect.collect { emissions.add(it) }
         }
+
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
+        advanceUntilIdle()
 
         sut.handleAction(DetailsUiAction.ToggleFavorite)
         advanceUntilIdle()
@@ -124,6 +171,7 @@ class DetailsViewModelTest : TestBase() {
         assertTrue(emissions.any { it is DetailsUiEffect.ShowMessage })
 
         effectJob.cancel()
+        stateJob.cancel()
     }
 
     @Test
