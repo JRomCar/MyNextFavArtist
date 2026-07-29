@@ -21,8 +21,8 @@ import kotlinx.coroutines.launch
 
 // Each ArtistDetails back-stack entry is scoped to its own ViewModelStore (see
 // rememberViewModelStoreNavEntryDecorator in MyNextFavArtistApp), so a given instance only ever
-// serves one artist - it's supplied once, via assisted injection, rather than threaded through
-// every action.
+// serves one artist - it's supplied once, via assisted injection, and its own onSubscribed hook
+// starts loading as soon as something collects uiState, with no action needed to kick it off.
 @HiltViewModel(assistedFactory = DetailsViewModel.Factory::class)
 class DetailsViewModel @AssistedInject constructor(
     @Assisted private val artist: Artist,
@@ -37,20 +37,20 @@ class DetailsViewModel @AssistedInject constructor(
         fun create(artist: Artist): DetailsViewModel
     }
 
+    override fun onSubscribed() {
+        observeFavoriteStatus()
+        loadReleaseGroups()
+    }
+
     fun handleAction(action: DetailsUiAction) {
         when (action) {
-            DetailsUiAction.LoadArtistDetails -> loadArtistDetails()
             DetailsUiAction.ToggleFavorite -> toggleFavorite()
+            DetailsUiAction.RetryReleaseGroups -> loadReleaseGroups()
             DetailsUiAction.OnBackRequest -> navigateBack()
         }
     }
 
-    private fun loadArtistDetails() {
-        checkFavoriteStatus()
-        loadReleaseGroups()
-    }
-
-    private fun checkFavoriteStatus() {
+    private fun observeFavoriteStatus() {
         launchExclusive(Key.FavoriteStatus) {
             observeIsFavorite(artist.mbid).collect { result ->
                 result.fold(
@@ -61,6 +61,8 @@ class DetailsViewModel @AssistedInject constructor(
         }
     }
 
+    // Reused for both the autostart and the retry action - same launchExclusive key, so a
+    // retry tap can't stack a second concurrent fetch behind the auto-triggered one.
     private fun loadReleaseGroups() {
         updateState { it.copy(releaseGroups = BaseUiState.Loading) }
         launchExclusive(Key.ReleaseGroups) {
@@ -77,7 +79,7 @@ class DetailsViewModel @AssistedInject constructor(
 
     private fun toggleFavorite() {
         updateState { it.copy(isFavoriteActionInProgress = true) }
-        if (uiState.value.isFavorite) {
+        if (currentState.isFavorite) {
             removeFavorite()
         } else {
             saveFavorite()
@@ -87,7 +89,7 @@ class DetailsViewModel @AssistedInject constructor(
     private fun removeFavorite() {
         viewModelScope.launch {
             // isFavorite isn't set here - the observeIsFavorite collector in
-            // checkFavoriteStatus already owns it and will pick up the write via Room's
+            // observeFavoriteStatus already owns it and will pick up the write via Room's
             // change invalidation shortly after.
             removeFavoriteArtist(artist.mbid).fold(
                 onSuccess = { updateState { it.copy(isFavoriteActionInProgress = false) } },

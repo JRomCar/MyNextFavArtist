@@ -21,6 +21,8 @@ class FavoritesViewModel @Inject constructor(
     private val removeAllFavoriteArtists: RemoveAllFavoriteArtists,
 ) : BaseViewModel<BaseUiState<List<Artist>>, BaseUiEffect>(BaseUiState.Initial) {
 
+    override fun onSubscribed() = loadFavoriteArtists()
+
     fun handleAction(action: FavoritesUiAction) {
         when (action) {
             is FavoritesUiAction.ClearAllSavedArtists -> removeAllFavorites()

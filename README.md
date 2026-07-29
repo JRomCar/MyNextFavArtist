@@ -163,13 +163,10 @@ Known and deliberately deferred, not oversights:
 - **`UiText.StringResource` is unstable to the Compose compiler**, because `args: List<Any>`
   is an interface type. Harmless today under strong skipping, but an immutable list type would
   make it stable outright.
-- **A pending change makes ViewModel loads start lazily on subscription, but they still don't
-  stop when a screen is unsubscribed.** Favorites' and Details' background collectors keep
-  running after their screen is gone. Fixing this means giving that background work a scope
-  tied to the subscription itself, not `viewModelScope`.
-- **`DetailsViewModel` still receives its target artist from the composable via
-  `LaunchedEffect(artist)`** instead of at construction. A fix using Hilt assisted injection
-  exists on another branch, not yet merged.
+- **ViewModel loads start lazily on subscription, but they still don't stop when a screen is
+  unsubscribed.** Favorites' and Details' background collectors keep running after their screen
+  is gone. Fixing this means giving that background work a scope tied to the subscription
+  itself, not `viewModelScope`.
 
 ---
 

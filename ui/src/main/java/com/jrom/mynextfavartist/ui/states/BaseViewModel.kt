@@ -6,9 +6,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -23,7 +25,37 @@ import kotlinx.coroutines.launch
 abstract class BaseViewModel<State, Effect>(initialState: State) : ViewModel() {
 
     private val _uiState = MutableStateFlow(initialState)
-    val uiState: StateFlow<State> = _uiState.asStateFlow()
+
+    // uiState starts producing values lazily: onSubscribed() only runs once uiState itself gets
+    // a subscriber (typically collectAsStateWithLifecycle in the screen composable), not at
+    // ViewModel construction. WhileSubscribed(5_000) keeps it running for 5s after the last
+    // subscriber leaves, so a quick tab-switch-and-back doesn't re-trigger the load - only a
+    // revisit after the screen has genuinely been gone for a while does.
+    val uiState: StateFlow<State> = _uiState
+        .onSubscription { onSubscribed() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), initialState)
+
+    /**
+     * The live state, for reads from inside the ViewModel. Deliberately not [uiState]: that one
+     * is a `stateIn` share, which freezes at its last shared value once sharing stops and only
+     * resumes tracking the source when a subscriber returns. Anything reading state to decide
+     * what to do next - rather than to render it - needs the source, not the share.
+     */
+    protected val currentState: State get() = _uiState.value
+
+    /**
+     * Called whenever [uiState] gains a subscriber: the first one, and any later one arriving
+     * after every previous subscriber has been gone for the full WhileSubscribed grace period.
+     * Override this instead of loading data in a constructor/init block.
+     *
+     * Fires once per sharing restart rather than once per ViewModel lifetime, so anything
+     * started here has to be safe to start more than once (launchExclusive's cancel-and-relaunch
+     * handles this for free). Must not suspend itself - launch real work into viewModelScope
+     * (typically via [launchExclusive]) rather than running it inline here.
+     */
+    protected open fun onSubscribed() {
+        // no-op by default
+    }
 
     // Channel over SharedFlow: effects (navigation, snackbars) must never be dropped for lack
     // of a collector, unlike state, which is fine to conflate.
@@ -56,10 +88,10 @@ abstract class BaseViewModel<State, Effect>(initialState: State) : ViewModel() {
      * A coroutine operator (collectLatest/flatMapLatest) gives this same cancel-and-relaunch
      * behavior for free, but only when there's already a Flow to collect from -
      * SearchViewModel's flatMapLatest works because typed queries arrive on a continuous
-     * StateFlow. The loads this guards are triggered by discrete UI actions (LoadArtists,
-     * LoadArtistDetails), not a continuous upstream source, so there's nothing to collectLatest
-     * over without inventing a trigger Flow purely to get the cancellation behavior - more
-     * machinery than this plain cancel-and-relaunch needs.
+     * StateFlow. The loads this guards are triggered by [onSubscribed] or discrete UI
+     * actions (LoadArtists, ToggleFavorite), not a continuous upstream source, so there's
+     * nothing to collectLatest over without inventing a trigger Flow purely to get the
+     * cancellation behavior - more machinery than this plain cancel-and-relaunch needs.
      */
     protected fun launchExclusive(key: Any, block: suspend CoroutineScope.() -> Unit) {
         exclusiveJobs.remove(key)?.cancel()

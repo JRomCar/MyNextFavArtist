@@ -17,6 +17,8 @@ class HomeViewModel @Inject constructor(
     private val getHomeArtists: GetHomeArtists,
 ) : BaseViewModel<HomeUiState, BaseUiEffect>(HomeUiState()) {
 
+    override fun onSubscribed() = loadHomeArtists()
+
     fun handleAction(action: HomeUiAction) {
         when (action) {
             is HomeUiAction.ArtistClicked -> onArtistClicked(action.artist)
@@ -29,12 +31,14 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun loadHomeArtists() {
-        val cachedArtists = uiState.value.artists as? BaseUiState.Success<List<Artist>>
-        // Every navigation back to Home re-triggers this load. If we already have a list on
-        // screen, keep showing it during the fetch and on failure - MusicBrainz has transient
-        // outages, and re-showing a stale list beats replacing a working screen with an error.
-        // isRefreshing is set regardless, so PullToRefresh's indicator reflects the in-flight
-        // request even when the cached list means `artists` itself doesn't move to Loading.
+        val cachedArtists = currentState.artists as? BaseUiState.Success<List<Artist>>
+        // Re-entering Home after being away for a while re-triggers this load (see
+        // BaseViewModel.onSubscribed), same as a manual pull-to-refresh/retry. If we
+        // already have a list on screen, keep showing it during the fetch and on failure -
+        // MusicBrainz has transient outages, and re-showing a stale list beats replacing a
+        // working screen with an error. isRefreshing is set regardless, so PullToRefresh's
+        // indicator reflects the in-flight request even when the cached list means `artists`
+        // itself doesn't move to Loading.
         updateState {
             it.copy(
                 artists = if (cachedArtists == null) BaseUiState.Loading else it.artists,

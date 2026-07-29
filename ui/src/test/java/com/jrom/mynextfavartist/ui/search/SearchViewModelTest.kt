@@ -42,17 +42,22 @@ class SearchViewModelTest : TestBase() {
 
     @Test
     fun `search request updates state to Loading then Success`() = runUnconfinedTest {
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
+
         sut.handleAction(SearchUiAction.SearchRequest("radio"))
         advanceTimeBy(300) // pass debounce
         advanceUntilIdle()
 
         val state = sut.uiState.value
         assertEquals(artistsList, (state as BaseUiState.Success).data)
+
+        stateJob.cancel()
     }
 
     @Test
     fun `search request updates state to Error on failure`() = runUnconfinedTest {
         whenever(searchArtists("bad")).thenReturn(flowOf(Result.Failure(DataError.Network.UNKNOWN)))
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
 
         sut.handleAction(SearchUiAction.SearchRequest("bad"))
         advanceTimeBy(300)
@@ -63,19 +68,27 @@ class SearchViewModelTest : TestBase() {
         val errorText = errorState.errorText as UiText.StringResource
         assertEquals(R.string.unknown_error, errorText.id)
         assertEquals(DataError.Network.UNKNOWN.asUiIcon(), errorState.errorIcon)
+
+        stateJob.cancel()
     }
 
     @Test
     fun `query shorter than 2 chars is not searched`() = runUnconfinedTest {
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
+
         sut.handleAction(SearchUiAction.SearchRequest("r"))
         advanceTimeBy(300)
         advanceUntilIdle()
 
         assertEquals(BaseUiState.Initial, sut.uiState.value)
+
+        stateJob.cancel()
     }
 
     @Test
     fun `clearing the query after a successful search resets state to Initial`() = runUnconfinedTest {
+        val stateJob = launch(unconfinedTestDispatcher) { sut.uiState.collect {} }
+
         sut.handleAction(SearchUiAction.SearchRequest("radio"))
         advanceTimeBy(300)
         advanceUntilIdle()
@@ -86,6 +99,8 @@ class SearchViewModelTest : TestBase() {
         advanceUntilIdle()
 
         assertEquals(BaseUiState.Initial, sut.uiState.value)
+
+        stateJob.cancel()
     }
 
     @Test
