@@ -183,6 +183,28 @@ project's, or the Studio wizard's — rather than anything the AI invented.
   faithfully because nothing about the code looked wrong on inspection — only manual testing
   surfaced it. Empty results now use a dedicated `BaseUiState.Empty`.
 
+## Passing the navigation argument to DetailsViewModel
+
+Directed by the developer, including the exact mechanism to use. `DetailsViewModel` used to
+learn which artist it was showing after construction: the screen fired a
+`LaunchedEffect(artist) { viewModel.handleAction(LoadArtistDetails(artist)) }` once composed,
+and the ViewModel stashed it in a `MutableStateFlow<Artist?>` that its loaders awaited with
+`.filterNotNull().first()`. It worked, but every load carried a race it didn't need to: nothing
+stopped a load from starting before the artist arrived.
+
+The developer asked to look for a Navigation 3-native way to supply the artist instead of
+working around its absence, and pointed the agent at [Android CLI](https://developer.android.com/tools/agents/android-cli)'s
+documentation search rather than general web search. That surfaced Google's own recipe for
+exactly this — [Passing Arguments to ViewModels (Hilt)](https://developer.android.com/guide/navigation/navigation-3/recipes/passingarguments):
+`@HiltViewModel(assistedFactory = ...)` with `@AssistedInject`/`@Assisted`, and
+`hiltViewModel(creationCallback = ...)` at the call site. `DetailsViewModel` now takes `artist`
+as an `@Assisted` constructor parameter, supplied once when `DetailsScreen` creates it — no
+`MutableStateFlow`, no `filterNotNull().first()`, and no window where a load could start before
+knowing what to load.
+
+`DetailsUiAction.LoadArtistDetails` and `ToggleFavorite` dropped their `artist` payload as a
+direct consequence — the ViewModel already has it — rather than as a separate cleanup.
+
 ## UI overhaul
 
 The screens shipped as working scaffolding — default Material colours, one typography token,

@@ -79,8 +79,10 @@ private const val SCRIM_ALPHA = 0.35f
 @Composable
 fun DetailsScreen(
     modifier: Modifier = Modifier,
-    viewModel: DetailsViewModel = hiltViewModel(),
     artist: Artist,
+    viewModel: DetailsViewModel = hiltViewModel<DetailsViewModel, DetailsViewModel.Factory>(
+        creationCallback = { factory -> factory.create(artist) },
+    ),
     onBackClick: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -106,7 +108,7 @@ fun DetailsScreen(
     )
 
     LaunchedEffect(artist) {
-        viewModel.handleAction(DetailsUiAction.LoadArtistDetails(artist))
+        viewModel.handleAction(DetailsUiAction.LoadArtistDetails)
     }
 
     viewModel.uiEffect.collectWithEffect { effect ->
@@ -202,7 +204,7 @@ fun DetailsContent(
                 modifier = sidePadding.padding(top = Dimensions.paddingMedium),
                 isFavorite = state.isFavorite,
                 isLoading = state.isFavoriteActionInProgress,
-                onClick = { onAction(DetailsUiAction.ToggleFavorite(artist)) }
+                onClick = { onAction(DetailsUiAction.ToggleFavorite) }
             )
         }
 
@@ -220,7 +222,7 @@ fun DetailsContent(
         albumsSection(
             modifier = sidePadding,
             releaseGroups = state.releaseGroups,
-            onRetryClick = { onAction(DetailsUiAction.LoadArtistDetails(artist)) },
+            onRetryClick = { onAction(DetailsUiAction.LoadArtistDetails) },
         )
     }
 }

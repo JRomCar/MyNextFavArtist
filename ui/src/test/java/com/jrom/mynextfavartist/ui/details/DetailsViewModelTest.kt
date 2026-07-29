@@ -36,6 +36,7 @@ class DetailsViewModelTest : TestBase() {
     @Before
     fun setUp() {
         sut = DetailsViewModel(
+            artist = artist,
             observeIsFavorite = observeIsFavorite,
             saveFavoriteArtist = saveFavoriteArtist,
             removeFavoriteArtist = removeFavoriteArtist,
@@ -50,7 +51,7 @@ class DetailsViewModelTest : TestBase() {
             Result.Success(MockData.testReleaseGroupsEntityList)
         )
 
-        sut.handleAction(DetailsUiAction.LoadArtistDetails(artist))
+        sut.handleAction(DetailsUiAction.LoadArtistDetails)
         advanceUntilIdle()
 
         val state = sut.uiState.value
@@ -68,7 +69,7 @@ class DetailsViewModelTest : TestBase() {
             Result.Failure(DataError.Network.UNKNOWN)
         )
 
-        sut.handleAction(DetailsUiAction.LoadArtistDetails(artist))
+        sut.handleAction(DetailsUiAction.LoadArtistDetails)
         advanceUntilIdle()
 
         assertTrue(sut.uiState.value.releaseGroups is BaseUiState.Error)
@@ -78,7 +79,7 @@ class DetailsViewModelTest : TestBase() {
     fun `toggle favorite calls saveFavorite when not already favorite`() = runUnconfinedTest {
         whenever(saveFavoriteArtist(artist)).thenReturn(Result.Success(Unit))
 
-        sut.handleAction(DetailsUiAction.ToggleFavorite(artist))
+        sut.handleAction(DetailsUiAction.ToggleFavorite)
         advanceUntilIdle()
 
         verify(saveFavoriteArtist).invoke(artist)
@@ -95,11 +96,11 @@ class DetailsViewModelTest : TestBase() {
         )
         whenever(removeFavoriteArtist(artist.mbid)).thenReturn(Result.Success(Unit))
 
-        sut.handleAction(DetailsUiAction.LoadArtistDetails(artist))
+        sut.handleAction(DetailsUiAction.LoadArtistDetails)
         advanceUntilIdle()
         assertTrue(sut.uiState.value.isFavorite)
 
-        sut.handleAction(DetailsUiAction.ToggleFavorite(artist))
+        sut.handleAction(DetailsUiAction.ToggleFavorite)
         advanceUntilIdle()
 
         verify(removeFavoriteArtist).invoke(artist.mbid)
@@ -115,7 +116,7 @@ class DetailsViewModelTest : TestBase() {
             sut.uiEffect.collect { emissions.add(it) }
         }
 
-        sut.handleAction(DetailsUiAction.ToggleFavorite(artist))
+        sut.handleAction(DetailsUiAction.ToggleFavorite)
         advanceUntilIdle()
 
         assertFalse(sut.uiState.value.isFavorite)

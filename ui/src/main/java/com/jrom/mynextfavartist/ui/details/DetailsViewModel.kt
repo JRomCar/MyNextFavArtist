@@ -13,34 +13,46 @@ import com.jrom.mynextfavartist.ui.error.asUiText
 import com.jrom.mynextfavartist.ui.states.BaseUiState
 import com.jrom.mynextfavartist.ui.states.BaseViewModel
 import com.jrom.mynextfavartist.ui.states.DetailsUiState
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class DetailsViewModel @Inject constructor(
+// Each ArtistDetails back-stack entry is scoped to its own ViewModelStore (see
+// rememberViewModelStoreNavEntryDecorator in MyNextFavArtistApp), so a given instance only ever
+// serves one artist - it's supplied once, via assisted injection, rather than threaded through
+// every action.
+@HiltViewModel(assistedFactory = DetailsViewModel.Factory::class)
+class DetailsViewModel @AssistedInject constructor(
+    @Assisted private val artist: Artist,
     private val observeIsFavorite: ObserveIsFavorite,
     private val saveFavoriteArtist: SaveFavoriteArtist,
     private val removeFavoriteArtist: RemoveFavoriteArtist,
     private val getArtistReleaseGroups: GetArtistReleaseGroups,
 ) : BaseViewModel<DetailsUiState, DetailsUiEffect>(DetailsUiState()) {
 
+    @AssistedFactory
+    interface Factory {
+        fun create(artist: Artist): DetailsViewModel
+    }
+
     fun handleAction(action: DetailsUiAction) {
         when (action) {
-            is DetailsUiAction.LoadArtistDetails -> loadArtistDetails(action.artist)
-            is DetailsUiAction.ToggleFavorite -> toggleFavorite(action.artist)
+            DetailsUiAction.LoadArtistDetails -> loadArtistDetails()
+            DetailsUiAction.ToggleFavorite -> toggleFavorite()
             DetailsUiAction.OnBackRequest -> navigateBack()
         }
     }
 
-    private fun loadArtistDetails(artist: Artist) {
-        checkFavoriteStatus(artist.mbid)
-        loadReleaseGroups(artist.mbid)
+    private fun loadArtistDetails() {
+        checkFavoriteStatus()
+        loadReleaseGroups()
     }
 
-    private fun checkFavoriteStatus(artistMbid: String) {
+    private fun checkFavoriteStatus() {
         launchExclusive(Key.FavoriteStatus) {
-            observeIsFavorite(artistMbid).collect { result ->
+            observeIsFavorite(artist.mbid).collect { result ->
                 result.fold(
                     onSuccess = { isFavorite -> updateState { it.copy(isFavorite = isFavorite) } },
                     onFailure = ::onDBAccessError,
@@ -49,10 +61,10 @@ class DetailsViewModel @Inject constructor(
         }
     }
 
-    private fun loadReleaseGroups(artistMbid: String) {
+    private fun loadReleaseGroups() {
         updateState { it.copy(releaseGroups = BaseUiState.Loading) }
         launchExclusive(Key.ReleaseGroups) {
-            getArtistReleaseGroups(artistMbid).fold(
+            getArtistReleaseGroups(artist.mbid).fold(
                 onSuccess = { releaseGroups ->
                     updateState { it.copy(releaseGroups = BaseUiState.Success(releaseGroups)) }
                 },
@@ -63,16 +75,16 @@ class DetailsViewModel @Inject constructor(
         }
     }
 
-    private fun toggleFavorite(artist: Artist) {
+    private fun toggleFavorite() {
         updateState { it.copy(isFavoriteActionInProgress = true) }
         if (uiState.value.isFavorite) {
-            removeFavorite(artist)
+            removeFavorite()
         } else {
-            saveFavorite(artist)
+            saveFavorite()
         }
     }
 
-    private fun removeFavorite(artist: Artist) {
+    private fun removeFavorite() {
         viewModelScope.launch {
             // isFavorite isn't set here - the observeIsFavorite collector in
             // checkFavoriteStatus already owns it and will pick up the write via Room's
@@ -84,7 +96,7 @@ class DetailsViewModel @Inject constructor(
         }
     }
 
-    private fun saveFavorite(artist: Artist) {
+    private fun saveFavorite() {
         viewModelScope.launch {
             saveFavoriteArtist(artist).fold(
                 onSuccess = { updateState { it.copy(isFavoriteActionInProgress = false) } },
