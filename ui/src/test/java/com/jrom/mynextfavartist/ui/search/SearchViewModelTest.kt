@@ -104,6 +104,13 @@ class SearchViewModelTest : TestBase() {
     }
 
     @Test
+    fun `search request updates the exposed query`() = runUnconfinedTest {
+        sut.handleAction(SearchUiAction.SearchRequest("radio"))
+
+        assertEquals("radio", sut.query.value)
+    }
+
+    @Test
     fun `artist clicked emits navigate ui effect`() = runUnconfinedTest {
         val emissions = mutableListOf<BaseUiEffect>()
         val effectJob = launch(unconfinedTestDispatcher) {

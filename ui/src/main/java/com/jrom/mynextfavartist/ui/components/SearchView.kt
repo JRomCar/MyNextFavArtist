@@ -15,11 +15,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -36,9 +32,9 @@ import com.jrom.mynextfavartist.ui.utils.PreviewWrapper
 @Composable
 fun SearchView(
     modifier: Modifier = Modifier,
+    query: String,
     onQueryChange: (query: String) -> Unit,
 ) {
-    var query by rememberSaveable { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
     val clearDescription = stringResource(R.string.clear_search_description)
@@ -59,10 +55,7 @@ fun SearchView(
             )
         },
         value = query,
-        onValueChange = {
-            query = it
-            onQueryChange(it)
-        },
+        onValueChange = onQueryChange,
         leadingIcon = {
             Icon(
                 painter = painterResource(R.drawable.ic_search),
@@ -73,10 +66,7 @@ fun SearchView(
         },
         trailingIcon = {
             if (query.isNotEmpty()) {
-                IconButton(onClick = {
-                    query = ""
-                    onQueryChange("")
-                }) {
+                IconButton(onClick = { onQueryChange("") }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_close),
                         contentDescription = clearDescription,
@@ -105,6 +95,7 @@ fun SearchView(
 @Composable
 private fun SearchViewPreview() = PreviewWrapper {
     SearchView(
+        query = "",
         onQueryChange = {},
     )
 }
