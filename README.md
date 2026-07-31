@@ -160,14 +160,7 @@ Known and deliberately deferred, not oversights:
   `rememberSaveable` in `SearchView`. Both are currently load-bearing (one restores the query
   that re-drives the search, the other the visible text) and they were verified not to
   diverge, but the query belongs in the ViewModel with `SearchView` made stateless.
-- **`UiText.StringResource` is unstable to the Compose compiler**, because `args: List<Any>`
-  is an interface type. Harmless today under strong skipping, but an immutable list type would
-  make it stable outright.
 - **ViewModel loads start lazily on subscription, but they still don't stop when a screen is
   unsubscribed.** Favorites' and Details' background collectors keep running after their screen
   is gone. Fixing this means giving that background work a scope tied to the subscription
   itself, not `viewModelScope`.
-
----
-
-See [AI_USAGE.md](AI_USAGE.md) for how this project was built with AI assistance.
