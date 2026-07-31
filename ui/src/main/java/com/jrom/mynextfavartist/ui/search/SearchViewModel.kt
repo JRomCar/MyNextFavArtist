@@ -29,8 +29,9 @@ class SearchViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
 ) : BaseViewModel<BaseUiState<List<Artist>>, BaseUiEffect>(BaseUiState.Initial) {
 
-    // Backed by SavedStateHandle so the typed query survives process death
-    private val searchQuery: StateFlow<String> = savedStateHandle.getStateFlow(SEARCH_QUERY_KEY, "")
+    // Backed by SavedStateHandle so the typed query survives process death. Public - it's the
+    // single source of truth for what's displayed, not just an internal trigger.
+    val query: StateFlow<String> = savedStateHandle.getStateFlow(SEARCH_QUERY_KEY, "")
 
     override fun onSubscribed() = observeSearchQuery()
 
@@ -46,7 +47,7 @@ class SearchViewModel @Inject constructor(
         // Keyed so a resubscribe after being away doesn't stack a second concurrent collector
         // of searchQuery alongside one already running from an earlier subscription.
         launchExclusive(Key.SearchQuery) {
-            searchQuery
+            query
                 .debounce(300.milliseconds)
                 .distinctUntilChanged() // Only process if the query has actually changed
                 .flatMapLatest { query ->

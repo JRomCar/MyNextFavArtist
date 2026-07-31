@@ -245,6 +245,22 @@ would sit frozen at its initial value. Fixed by adding an explicit collector to 
 reading state, matching a pattern one test (`HomeViewModelTest`'s refresh test) already used for
 an unrelated reason.
 
+## Hoisting the search query into SearchViewModel
+
+Directed by the developer, including the exact target design: "the query belongs in the
+ViewModel with `SearchView` made stateless." `SearchViewModel` already held the query in a
+`SavedStateHandle`-backed flow to drive the actual search; `SearchView` separately held its own
+copy in `rememberSaveable` to drive what the text field displayed. Both survived process death
+independently, and an earlier on-device check had confirmed they never drifted apart — but only
+because `SearchView` forwarded every keystroke to the ViewModel already, which made the second
+copy redundant rather than necessary.
+
+`SearchViewModel`'s query flow became public instead of private, and `SearchView` dropped its
+local state entirely to become a controlled component: its `TextField` value now comes from a
+`query` parameter, and both the typed-character and clear-button paths call `onQueryChange`
+directly instead of writing to local state first. One flow, read in two places, instead of two
+flows kept in sync by convention.
+
 ## UI overhaul
 
 The screens shipped as working scaffolding — default Material colours, one typography token,
@@ -291,8 +307,9 @@ room for the answer to be "it is necessary, and here's why". Several times it wa
 - Two separate questions about lambdas causing recompositions ended with the Compose compiler
   reports showing every screen already `restartable skippable`. No change made.
 - A question about the search query living in both `SavedStateHandle` and `rememberSaveable`
-  ended with an on-device test showing the two never diverge. The duplication is real and is
-  logged under [Pending work](README.md#pending-work), but it isn't the bug it looked like.
+  ended with an on-device test showing the two never diverge. The duplication was real but not
+  the bug it looked like at the time — it was removed later anyway, once it was in scope; see
+  [Hoisting the search query into SearchViewModel](#hoisting-the-search-query-into-searchviewmodel).
 
 **Claims were made to produce evidence.** "It doesn't recompose" was not accepted as an answer;
 the compiler reports were turned on to check. "The IPv6 filter fixed it" was not accepted
@@ -308,8 +325,10 @@ architecture is the hardest output to audit precisely because it looks deliberat
 boundary reads as a decision someone made, even when the reasoning behind it was never checked.
 
 **Scope was held.** Suggested work that was real but out of scope was deferred deliberately
-rather than absorbed — the search-query hoist is recorded in Pending work instead of being
-folded into a UI commit.
+rather than absorbed — the search-query hoist sat recorded in Pending work for a while rather
+than being folded into an unrelated commit, and was only picked up once it was its own
+deliberate piece of work; see
+[Hoisting the search query into SearchViewModel](#hoisting-the-search-query-into-searchviewmodel).
 
 **The prose was edited too, not just the code.** Generated writing reads as finished long
 before it is: confident, well-organised, and a third longer than it needs to be. Both markdown

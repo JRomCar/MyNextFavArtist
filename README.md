@@ -156,10 +156,6 @@ Known and deliberately deferred, not oversights:
   the suite.
 - **Search-result caching.** Repeating a search re-hits the network every time. A short-lived
   cache would matter more here than in most apps, given the 1 req/sec limit.
-- **The search query lives in two places** — `SavedStateHandle` in `SearchViewModel` and
-  `rememberSaveable` in `SearchView`. Both are currently load-bearing (one restores the query
-  that re-drives the search, the other the visible text) and they were verified not to
-  diverge, but the query belongs in the ViewModel with `SearchView` made stateless.
 - **ViewModel loads start lazily on subscription, but they still don't stop when a screen is
   unsubscribed.** Favorites' and Details' background collectors keep running after their screen
   is gone. Fixing this means giving that background work a scope tied to the subscription

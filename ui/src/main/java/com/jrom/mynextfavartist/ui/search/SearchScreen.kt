@@ -43,6 +43,7 @@ fun SearchScreen(
     onDetailClick: (Artist) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val query by viewModel.query.collectAsStateWithLifecycle()
 
     viewModel.uiEffect.collectWithEffect { effect ->
         when (effect) {
@@ -54,6 +55,7 @@ fun SearchScreen(
         modifier = modifier,
         contentPadding = contentPadding,
         state = uiState,
+        query = query,
         onAction = viewModel::handleAction
     )
 }
@@ -63,6 +65,7 @@ fun SearchContent(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     state: BaseUiState<List<Artist>>,
+    query: String,
     onAction: (SearchUiAction) -> Unit,
 ) {
     val screenDescription = stringResource(R.string.search_screen_description)
@@ -79,9 +82,10 @@ fun SearchContent(
                 .padding(top = contentPadding.calculateTopPadding())
                 .imePadding()
         ) {
-            SearchView(onQueryChange = { query ->
-                onAction(SearchUiAction.SearchRequest(query))
-            })
+            SearchView(
+                query = query,
+                onQueryChange = { newQuery -> onAction(SearchUiAction.SearchRequest(newQuery)) },
+            )
 
             when (state) {
                 BaseUiState.Initial, BaseUiState.Empty -> EmptyStateView(
@@ -137,6 +141,7 @@ private fun SearchContentPreview() {
     PreviewWrapper {
         SearchContent(
             state = BaseUiState.Success(previewArtists),
+            query = "radiohead",
             onAction = {})
     }
 }
@@ -149,6 +154,7 @@ private fun ErrorSearchContentPreview() {
         val error = DataError.Network.UNKNOWN
         SearchContent(
             state = BaseUiState.Error(error.asUiText(), error.asUiIcon()),
+            query = "radiohead",
             onAction = {})
     }
 }
@@ -160,6 +166,7 @@ private fun EmptySearchContentPreview() {
     PreviewWrapper {
         SearchContent(
             state = BaseUiState.Initial,
+            query = "",
             onAction = {})
     }
 }
@@ -171,6 +178,7 @@ private fun LoadingSearchContentPreview() {
     PreviewWrapper {
         SearchContent(
             state = BaseUiState.Loading,
+            query = "radiohead",
             onAction = {})
     }
 }
