@@ -78,10 +78,12 @@ interface and DTOs — ported from that project and adapted to MusicBrainz.
 **Features.** All four screens (Home, Search, Favorites, Details) with their ViewModels,
 actions/effects, and navigation wiring.
 
-**Tests.** ViewModel tests for all four screens, repository and data-source tests, and two
-with no equivalent in the earlier project — `RateLimitInterceptorTest`, and `GetHomeArtistsTest`
-for the seed-query construction. Written to match the existing structure and stack (JUnit4 +
-Mockito-Kotlin + Truth), currently 89 tests.
+**Tests.** ViewModel tests for all four screens, repository and data-source tests, and
+`RateLimitInterceptorTest`, which has no equivalent in the earlier project. Written to match the
+existing structure and stack (JUnit4 + Mockito-Kotlin + Truth), currently 100 tests.
+
+A `GetHomeArtistsTest` was written alongside these but later removed — see
+[Rejected](#what-the-ai-produced-that-was-rewritten-or-rejected) below.
 
 **Debugging.** Built and ran the app on an emulator, drove it through the real UI, and read
 `adb logcat` to find bugs that code review wouldn't have caught.
@@ -159,6 +161,11 @@ follows is what could be attributed accurately, not a complete tally.
 - **Assorted UI-overhaul output**, listed under [UI overhaul](#ui-overhaul) below — all of it
   caught by the developer — plus the review findings that didn't survive verification, listed
   at the top.
+- **`GetHomeArtistsTest`** — *caught by the developer, months after it was written.* Named
+  `` `delegates to the repository's cached getHomeArtists` ``, mirroring `GetHomeArtists`'s own
+  KDoc about Room/TTL caching — but the test mocked `ArtistRepository` outright, so no caching
+  behaviour was ever exercised. It only proved the same trivial pass-through every other
+  `domain` use case has, undistinguished from them by a name that claimed otherwise. Deleted.
 
 ## What was not ported faithfully, and why
 
