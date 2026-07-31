@@ -164,7 +164,3 @@ Known and deliberately deferred, not oversights:
   unsubscribed.** Favorites' and Details' background collectors keep running after their screen
   is gone. Fixing this means giving that background work a scope tied to the subscription
   itself, not `viewModelScope`.
-
----
-
-See [AI_USAGE.md](AI_USAGE.md) for how this project was built with AI assistance.
